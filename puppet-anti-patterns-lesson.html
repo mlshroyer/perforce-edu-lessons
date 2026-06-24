@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Puppet Anti-Patterns: What They Are, Why They Matter, and How to Fix Them</title>
+
+  <!-- Gibson Font -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/nicholasgasior/gfonts@master/dist/gibson/gibson.css" />
+  <!-- Open Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Highlight.js default CSS -->
+  <style>
+    /* ===== HIGHLIGHT.JS DEFAULT THEME (inline) ===== */
+    pre code.hljs{display:block;overflow-x:auto;padding:1em}
+    code.hljs{padding:3px 5px}
+    .hljs{background:#f3f3f3;color:#444}
+    .hljs-comment{color:#697070}
+    .hljs-punctuation,.hljs-tag{color:#444a}
+    .hljs-tag .hljs-attr,.hljs-tag .hljs-name{color:#444}
+    .hljs-attribute,.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,
+    .hljs-name,.hljs-selector-tag{font-weight:700}
+    .hljs-deletion,.hljs-number,.hljs-quote,.hljs-selector-class,
+    .hljs-selector-id,.hljs-string,.hljs-template-tag,.hljs-type{color:#800}
+    .hljs-section,.hljs-title{color:#800;font-weight:700}
+    .hljs-link,.hljs-operator,.hljs-regexp,.hljs-selector-attr,
+    .hljs-selector-pseudo,.hljs-symbol,.hljs-template-variable,
+    .hljs-variable{color:#ab5656}
+    .hljs-literal{color:#695}
+    .hljs-addition,.hljs-built_in,.hljs-bullet,.hljs-code{color:#397300}
+    .hljs-meta{color:#1f7199}
+    .hljs-meta .hljs-string{color:#38a}
+    .hljs-emphasis{font-style:italic}
+    .hljs-strong{font-weight:700}
+  </style>
+
+  <!-- Highlight.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/puppet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/yaml.min.js"></script>
+
+  <style>
+    /* ===== CSS CUSTOM PROPERTIES — Perforce Branding ===== */
+    :root {
+      --pf-indigo:    #403A60;
+      --pf-navy:      #1A2437;
+      --pf-cyan:      #00B4D8;
+      --pf-mint:      #00C9A7;
+      --pf-light-grey:#F4F5F7;
+      --pf-white:     #FFFFFF;
+      --pf-red:       #D7263D;
+      --pf-green:     #2E7D32;
+
+      --font-heading: 'Gibson', 'Open Sans', sans-serif;
+      --font-body:    'Open Sans', sans-serif;
+
+      --space-xs:  0.5rem;
+      --space-sm:  1rem;
+      --space-md:  1.5rem;
+      --space-lg:  2.5rem;
+      --space-xl:  4rem;
+
+      --radius:    10px;
+      --radius-lg: 16px;
+      --shadow-card: 0 4px 20px rgba(26,36,55,0.08);
+      --shadow-hover: 0 8px 32px rgba(26,36,55,0.14);
+      --transition: 0.3s ease;
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--pf-light-grey);
+      color: var(--pf-navy);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    h1, h2, h3, h4 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--pf-navy);
+    }
+
+    h1 { font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); margin-bottom: var(--space-sm); }
+    h3 { font-size: clamp(1.15rem, 2.2vw, 1.5rem); margin-bottom: var(--space-xs); }
+    p  { margin-bottom: var(--space-sm); }
+
+    a { color: var(--pf-cyan); text-decoration: none; transition: color var(--transition); }
+    a:hover { color: var(--pf-mint); }
+
+    /* ===== LAYOUT ===== */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 var(--space-md);
+    }
+
+    section {
+      padding: var(--space-xl) 0;
+    }
+
+    /* ===== TOPBAR ===== */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: var(--pf-white);
+      border-bottom: 1px solid rgba(26,36,55,0.06);
+      transition: box-shadow var(--transition);
+    }
+
+    #topbar.scrolled {
+      box-shadow: 0 2px 16px rgba(26,36,55,0.10);
+    }
+
+    .topbar-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.65rem var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--pf-navy);
+      white-space: nowrap;
+    }
+
+    .topbar-brand svg { height: 28px; width: auto; }
+
+    .topbar-nav {
+      display: flex;
+      gap: var(--space-xs);
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .topbar-nav a {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--pf-navy);
+      padding: 4px 10px;
+      border-radius: 6px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .topbar-nav a:hover,
+    .topbar-nav a.active {
+      background: rgba(0,180,216,0.10);
+      color: var(--pf-cyan);
+    }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-track {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      z-index: 1001;
+      background: transparent;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--pf-cyan), var(--pf-mint));
+      transition: width 0.15s linear;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      margin-top: 64px;
+      padding: var(--space-xl) 0 var(--space-lg);
+      background: linear-gradient(135deg, var(--pf-navy) 0%, var(--pf-indigo) 100%);
+      color: var(--pf-white);
+      text-align: center;
+    }
+
+    .hero h1 {
+      color: var(--pf-white);
+      margin-bottom: var(--space-xs);
+    }
+
+    .hero .subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      opacity: 0.85;
+      max-width: 700px;
+      margin: 0 auto var(--space-md);
+    }
+
+    .hero .tag {
+      display: inline-block;
+      background: rgba(0,180,216,0.2);
+      color: var(--pf-cyan);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: var(--space-sm);
+    }
+/* ===== OVERVIEW BENEFITS GRID ===== */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+
+    .benefit-card {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      padding: var(--space-md);
+      box-shadow: var(--shadow-card);
+      border-left: 4px solid var(--pf-cyan);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .benefit-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .benefit-card .icon {
+      font-size: 1.5rem;
+      margin-bottom: var(--space-xs);
+    }
+
+    .benefit-card p {
+      font-size: 0.92rem;
+      margin: 0;
+      font-weight: 600;
+      color: var(--pf-navy);
+    }
+
+    /* ===== SECTION INTRO ===== */
+    .section-intro {
+      max-width: 740px;
+      margin: 0 auto var(--space-lg);
+      text-align: center;
+    }
+
+    .section-intro p {
+      font-size: 1.05rem;
+      color: #555;
+    }
+
+    /* ===== ANTI-PATTERN CARD ===== */
+    .ap-card {
+      background: var(--pf-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      transition: box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ap-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 5px; height: 100%;
+      background: linear-gradient(180deg, var(--pf-red) 0%, var(--pf-indigo) 100%);
+      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    }
+
+    .ap-card:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .ap-card .ap-number {
+      display: inline-block;
+      background: var(--pf-navy);
+      color: var(--pf-white);
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .ap-card h2 {
+      color: var(--pf-navy);
+      margin-bottom: var(--space-xs);
+    }
+
+    .ap-card h3 {
+      font-family: var(--font-heading);
+      color: var(--pf-indigo);
+      margin-top: var(--space-md);
+    }
+
+    .ap-card > p,
+    .ap-card > ul {
+      font-size: 0.97rem;
+      color: #444;
+    }
+
+    .ap-card ul {
+      padding-left: 1.4rem;
+      margin-bottom: var(--space-sm);
+    }
+
+    .ap-card ul li {
+      margin-bottom: 0.35rem;
+    }
+
+    /* ===== CODE COMPARISON BLOCKS ===== */
+    .code-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+      margin: var(--space-md) 0;
+    }
+
+    @media (max-width: 700px) {
+      .code-compare {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .code-block {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(26,36,55,0.06);
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 8px 16px;
+      font-family: var(--font-heading);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .code-block-header.bad {
+      background: #FDE8EC;
+      color: var(--pf-red);
+    }
+
+    .code-block-header.good {
+      background: #E8F5E9;
+      color: var(--pf-green);
+    }
+
+    .code-block pre {
+      margin: 0;
+      border-radius: 0;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .code-block pre code.hljs {
+      background: #FAFAFA;
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    /* Single wide code block (for YAML, etc.) */
+    .code-single {
+      margin: var(--space-sm) 0;
+    }
+
+    .code-single .code-block-header {
+      background: #E3F2FD;
+      color: #1565C0;
+    }
+
+    /* ===== FIX CALLOUT ===== */
+    .fix-callout {
+      background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+      border-left: 4px solid var(--pf-mint);
+      border-radius: var(--radius);
+      padding: var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) + 4px);
+      margin: var(--space-md) 0;
+    }
+
+    .fix-callout h3 {
+      color: var(--pf-green);
+      margin-top: 0;
+    }
+
+    .fix-callout p,
+    .fix-callout ul {
+      font-size: 0.95rem;
+    }
+
+    /* ===== SUMMARY TABLE ===== */
+    .summary-table-wrapper {
+      overflow-x: auto;
+      margin: var(--space-md) 0;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--pf-white);
+      font-size: 0.92rem;
+    }
+
+    .summary-table thead {
+      background: var(--pf-navy);
+      color: var(--pf-white);
+    }
+
+    .summary-table th {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      padding: 14px 20px;
+      text-align: left;
+      letter-spacing: 0.03em;
+    }
+
+    .summary-table td {
+      padding: 12px 20px;
+      border-bottom: 1px solid #EEF0F3;
+    }
+
+    .summary-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .summary-table tbody tr:hover {
+      background: #F8F9FB;
+    }
+
+    /* ===== RESOURCES LIST ===== */
+    .resources-list {
+      list-style: none;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-sm);
+    }
+
+    .resources-list li {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .resources-list li:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .resources-list a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: var(--space-sm) var(--space-md);
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--pf-navy);
+    }
+
+    .resources-list a:hover {
+      color: var(--pf-cyan);
+    }
+
+    .resources-list .link-icon {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      background: rgba(0,180,216,0.10);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    /* ===== QUIZ SECTION ===== */
+    .quiz-section {
+      background: var(--pf-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-lg);
+    }
+
+    .quiz-question {
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid #EEF0F3;
+    }
+
+    .quiz-question:last-of-type {
+      border-bottom: none;
+      margin-bottom: var(--space-sm);
+    }
+
+    .quiz-question h3 {
+      font-family: var(--font-heading);
+      color: var(--pf-navy);
+      margin-bottom: var(--space-sm);
+      font-size: 1.05rem;
+    }
+
+    .quiz-options {
+      list-style: none;
+      padding: 0;
+    }
+
+    .quiz-options li {
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-options label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      padding: 10px 16px;
+      border: 2px solid #E0E3E8;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.93rem;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .quiz-options label:hover {
+      border-color: var(--pf-cyan);
+      background: rgba(0,180,216,0.04);
+    }
+
+    .quiz-options input[type="radio"] {
+      margin-top: 3px;
+      accent-color: var(--pf-cyan);
+      flex-shrink: 0;
+    }
+
+    .quiz-options label.correct {
+      border-color: var(--pf-green);
+      background: #E8F5E9;
+    }
+
+    .quiz-options label.incorrect {
+      border-color: var(--pf-red);
+      background: #FDE8EC;
+    }
+
+    .quiz-feedback {
+      margin-top: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    .quiz-feedback.show { display: block; }
+    .quiz-feedback.correct-fb { color: var(--pf-green); }
+    .quiz-feedback.incorrect-fb { color: var(--pf-red); }
+
+    .quiz-submit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--pf-white);
+      background: linear-gradient(135deg, var(--pf-cyan), var(--pf-mint));
+      border: none;
+      border-radius: 8px;
+      padding: 14px 32px;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .quiz-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,180,216,0.3);
+    }
+
+    .quiz-result {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      border-radius: var(--radius);
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.15rem;
+      text-align: center;
+      display: none;
+    }
+
+    .quiz-result.show { display: block; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--pf-navy);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: var(--space-md) var(--space-sm);
+      font-size: 0.82rem;
+    }
+
+    footer a {
+      color: var(--pf-cyan);
+    }
+
+    footer strong {
+      color: var(--pf-white);
+    }
+
+    /* ===== SCROLL ANIMATIONS ===== */
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .animate-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== CONTACT BANNER ===== */
+    .contact-banner {
+      background: linear-gradient(135deg, var(--pf-indigo) 0%, var(--pf-navy) 100%);
+      color: var(--pf-white);
+      text-align: center;
+      padding: var(--space-lg) var(--space-md);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .contact-banner h2 { color: var(--pf-white); margin-bottom: var(--space-xs); }
+
+    .contact-banner a.email-link {
+      display: inline-block;
+      margin-top: var(--space-sm);
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--pf-navy);
+      background: var(--pf-cyan);
+      padding: 12px 28px;
+      border-radius: 8px;
+      transition: background var(--transition), transform var(--transition);
+    }
+
+    .contact-banner a.email-link:hover {
+      background: var(--pf-mint);
+      transform: translateY(-2px);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .topbar-nav { display: none; }
+      .hero { padding: var(--space-lg) 0 var(--space-md); }
+      .ap-card { padding: var(--space-md); }
+      section { padding: var(--space-lg) 0; }
+    }
+
+    @media (max-width: 480px) {
+      .benefits-grid { grid-template-columns: 1fr; }
+      .resources-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== PROGRESS BAR ===== -->
+<div class="progress-track"><div id="progressBar"></div></div>
+
+<!-- ===== TOPBAR ===== -->
+<header id="topbar">
+  <div class="topbar-inner">
+    <nav class="topbar-nav">
+      <a href="#overview">Overview</a>
+      <a href="#ap1">Hardcoding</a>
+      <a href="#ap2">exec Overuse</a>
+      <a href="#ap3">Roles &amp; Profiles</a>
+      <a href="#ap4">params.pp</a>
+      <a href="#ap5">Duplicates</a>
+      <a href="#ap6">Monoliths</a>
+      <a href="#ap7">Node Defs</a>
+      <a href="#ap8">Idempotency</a>
+      <a href="#quiz">Quiz</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container">
+    <span class="tag">Puppet Education — On-Demand Lesson</span>
+    <h1>Puppet Anti-Patterns</h1>
+    <p class="subtitle">What They Are, Why They Matter, and How to Fix Them</p>
+  </div>
+</section>
+
+<!-- ===== OVERVIEW ===== -->
+<section id="overview">
+  <div class="container">
+    <div class="section-intro animate-on-scroll">
+      <h2>🎯 Lesson Overview</h2>
+      <p>In software and infrastructure automation, an <strong>anti-pattern</strong> is a common practice that seems logical but actually creates long-term problems — making your code harder to maintain, harder to understand, and more likely to break. In Puppet, anti-patterns often emerge when teams prioritize short-term speed over long-term stability.</p>
+      <p>This lesson is based on the <strong>Puppet language style guide</strong>, which promotes consistent formatting in the Puppet language, giving you a common pattern, design, and style to follow when developing modules. This consistency in code and module structure makes it easier to update and maintain the code.</p>
+    </div>
+
+    <h3 style="text-align:center; margin-bottom: var(--space-md);" class="animate-on-scroll">Addressing anti-patterns means your infrastructure code becomes:</h3>
+
+    <div class="benefits-grid animate-on-scroll">
+      <div class="benefit-card">
+        <div class="icon">📖</div>
+        <p>Easier to read and understand</p>
+      </div>
+      <div class="benefit-card">
+        <div class="icon">✅</div>
+        <p>Easier to test and validate</p>
+      </div>
+      <div class="benefit-card">
+        <div class="icon">♻️</div>
+        <p>More reusable across environments</p>
+      </div>
+      <div class="benefit-card">
+        <div class="icon">🛡️</div>
+        <p>Less prone to configuration drift and errors</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #1 ===== -->
+<section id="ap1">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #1</span>
+      <h2>🚫 Hardcoding Data in Puppet Code</h2>
+
+      <h3>What It Is</h3>
+      <p>Hardcoding data means embedding environment-specific values (like IP addresses, package versions, usernames, or file paths) directly inside your Puppet manifests instead of externalizing them.</p>
+
+      <h3>Why It Matters</h3>
+      <p>Puppet's strength is in reusable code. Code that serves many needs must be configurable: <strong>put site-specific information in external configuration data files, rather than in the code itself.</strong> When data is baked into your code, changing a value in one environment means you have to touch the code itself — which defeats the purpose of automation.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix: Use Hiera</h3>
+        <p>Using a tool called <strong>Hiera</strong>, you can separate the data from the code and place it in a centralized location. This allows you to specify guardrails and define known parameters and variations, so that your code is fully testable and you can validate all the edge cases of your parameters.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (Hardcoded)</div>
+          <pre><code class="language-puppet">class myapp {
+  package { 'myapp':
+    ensure => '2.3.1',
+  }
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Hiera)</div>
+          <pre><code class="language-puppet">class myapp (
+  String $version = lookup('myapp::version'),
+) {
+  package { 'myapp':
+    ensure => $version,
+  }
+}</code></pre>
+        </div>
+      </div>
+      <div class="code-single">
+        <div class="code-block">
+          <div class="code-block-header" style="background:#E3F2FD; color:#1565C0;">📄 common.yaml</div>
+          <pre><code class="language-yaml">myapp::version: '2.3.1'</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #2 ===== -->
+<section id="ap2">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #2</span>
+      <h2>🚫 Overusing the <code>exec</code> Resource</h2>
+
+      <h3>What It Is</h3>
+      <p>The <code>exec</code> resource runs shell commands. Teams new to Puppet often lean on <code>exec</code> too heavily to accomplish tasks that native Puppet resource types handle far better.</p>
+
+      <h3>Why It Matters</h3>
+      <p>Any command in an <code>exec</code> resource must be able to run multiple times without causing harm — that is, it must be <strong>idempotent</strong>. There are three main ways for an <code>exec</code> to be idempotent:</p>
+      <ul>
+        <li>The command itself is already idempotent.</li>
+        <li>The exec has an <code>onlyif</code>, <code>unless</code>, or <code>creates</code> attribute, which prevents Puppet from running the command unless some condition is met.</li>
+        <li>The exec has <code>refreshonly =&gt; true</code>, which allows Puppet to run the command only when some other resource is changed.</li>
+      </ul>
+      <p>If none of these conditions are met, the exec resource will run on every Puppet agent run, which can cause unintended side effects, system instability, and make your infrastructure non-idempotent.</p>
+      <p>There's a widespread tendency to use collections of execs to manage resources that aren't covered by an existing resource type. This works fine for simple tasks, but once your exec pile gets complex enough that you really have to think to understand what's happening, you should consider <strong>developing a custom resource type</strong> instead, as it is much more predictable and maintainable.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix</h3>
+        <p>Use <strong>native Puppet resource types</strong> (<code>package</code>, <code>service</code>, <code>file</code>, <code>user</code>, etc.) wherever possible. If you must use <code>exec</code>, always include <code>onlyif</code>, <code>unless</code>, or <code>creates</code> to enforce idempotency.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern</div>
+          <pre><code class="language-puppet">exec { 'install-curl':
+  command => '/usr/bin/apt-get install -y curl',
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice</div>
+          <pre><code class="language-puppet">package { 'curl':
+  ensure => installed,
+}</code></pre>
+        </div>
+      </div>
+      <div class="code-single">
+        <div class="code-block">
+          <div class="code-block-header good">✔ If exec Is Necessary, Make It Idempotent</div>
+          <pre><code class="language-puppet">exec { 'run-migration':
+  command => '/opt/app/migrate.sh',
+  onlyif  => '/opt/app/needs_migration.sh',
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #3 ===== -->
+<section id="ap3">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #3</span>
+      <h2>🚫 Skipping the Roles and Profiles Pattern</h2>
+
+      <h3>What It Is</h3>
+      <p>Teams often assign classes directly to nodes in <code>site.pp</code> or via an ENC without any abstraction layer. This is called "flat" or "direct" classification.</p>
+
+      <h3>Why It Matters</h3>
+      <p>Without roles and profiles, people typically build system configurations in their node classifier or main manifest, using Hiera to handle tricky inheritance problems. A standard approach is to create a group of similar nodes and assign classes to it, then create child groups with extra classes for nodes that have additional needs. Another common pattern is to put everything in Hiera, using a very large hierarchy that reflects every variation in the infrastructure. But most people find direct building gets difficult to understand and maintain over time.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix: Adopt the Roles and Profiles Method</h3>
+        <p>The roles and profiles method is <strong>the most reliable way to build reusable, configurable, and refactorable system configurations.</strong> It separates your code into three levels:</p>
+        <ul>
+          <li><strong>Component modules</strong> — Normal modules that manage one particular technology (e.g., <code>puppetlabs/apache</code>).</li>
+          <li><strong>Profiles</strong> — Wrapper classes that use multiple component modules to configure a layered technology stack.</li>
+          <li><strong>Roles</strong> — Wrapper classes that use multiple profiles to build a complete system configuration.</li>
+        </ul>
+        <p>A better interface makes hierarchical data easier to use, makes system configuration easier to read, and makes refactoring easier.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (Direct Classification)</div>
+          <pre><code class="language-puppet"># site.pp
+node 'webserver01.example.com' {
+  include apache
+  include mysql
+  include firewall
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Roles &amp; Profiles)</div>
+          <pre><code class="language-puppet"># Role
+class role::webserver {
+  include profile::base
+  include profile::apache
+  include profile::mysql
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #4 ===== -->
+<section id="ap4">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #4</span>
+      <h2>🚫 The <code>params.pp</code> Pattern</h2>
+
+      <h3>What It Is</h3>
+      <p>The <code>params.pp</code> pattern is an older approach where modules used a separate params class with conditional logic and class inheritance to set default parameter values per operating system.</p>
+
+      <h3>Why It Matters</h3>
+      <p>If you are maintaining old code created prior to Puppet 4.9, you might encounter the use of a <code>params.pp</code> pattern. This pattern makes maintenance and troubleshooting difficult — refactor such code to use the <strong>Hiera data-in-modules pattern</strong> instead. Class inheritance can have unpredictable effects and makes troubleshooting difficult.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix: Use Data-in-Modules with Hiera</h3>
+        <p>Modules need default values for their class parameters. Before, the preferred way to do this was the <code>params.pp</code> pattern. With <strong>Hiera 5</strong>, you can use the "data in modules" approach instead.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (params.pp)</div>
+          <pre><code class="language-puppet">class my_module (
+  String $source = $my_module::params::source,
+  String $config = $my_module::params::config,
+) inherits my_module::params {
+  # body of class
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Data in Modules)</div>
+          <pre><code class="language-puppet">class my_module (
+  String $source,
+  String $config,
+) {
+  # body of class
+}</code></pre>
+        </div>
+      </div>
+      <div class="code-single">
+        <div class="code-block">
+          <div class="code-block-header" style="background:#E3F2FD; color:#1565C0;">📄 data/common.yaml</div>
+          <pre><code class="language-yaml">my_module::source: 'default source value'
+my_module::config: 'default config value'</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ===== ANTI-PATTERN #5 ===== -->
+<section id="ap5">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #5</span>
+      <h2>🚫 Duplicate Resource Declarations</h2>
+
+      <h3>What It Is</h3>
+      <p>Declaring the same resource (same type and title) more than once in the same catalog.</p>
+
+      <h3>Why It Matters</h3>
+      <p>Each resource must be unique; Puppet does not allow you to declare the same resource twice. This is to prevent multiple conflicting values from being declared for the same attribute. Puppet uses the <strong>resource title</strong> and the <strong>name attribute or namevar</strong> to identify duplicate resources — if either the title or the name is duplicated within a given resource type, <strong>catalog compilation fails</strong>.</p>
+      <p>This is a common mistake when multiple modules or profiles try to manage the same resource independently.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix</h3>
+        <p>To provide the same resource for multiple classes, use a <strong>class</strong> or a <strong>virtual resource</strong> to add it to the catalog in multiple places without duplicating it. Extract shared resources into a single shared profile (e.g., <code>profile::base</code>) and include it once, avoiding redundant declarations.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (Duplicate Declaration)</div>
+          <pre><code class="language-puppet"># In profile::apache
+package { 'curl':
+  ensure => installed,
+}
+
+# In profile::base (same catalog)
+package { 'curl':
+  ensure => installed,
+  # Duplicate! Catalog compilation will FAIL.
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Shared Profile)</div>
+          <pre><code class="language-puppet"># profile::base — single source of truth
+class profile::base {
+  package { 'curl':
+    ensure => installed,
+  }
+}
+
+# Other profiles simply include it:
+# include profile::base</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #6 ===== -->
+<section id="ap6">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #6</span>
+      <h2>🚫 Classes That Do Too Much (Monolithic Classes)</h2>
+
+      <h3>What It Is</h3>
+      <p>Creating large, monolithic classes that try to manage too many things at once — essentially a "god class" that handles multiple unrelated concerns.</p>
+
+      <h3>Why It Matters</h3>
+      <p>When in doubt, err on the side of simplicity. A module should contain related resources that enable it to accomplish a task. <strong>If you describe the function of your module and you find yourself using the word "and," consider splitting the module.</strong> Have one goal, with all your classes and parameters focused on achieving it.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix: Structure Classes for a Single Purpose</h3>
+        <p>Structure classes and defined types to accomplish <strong>one task</strong>. Additionally, split your module into <strong>public</strong> and <strong>private</strong> classes and defined types where possible.</p>
+        <ul>
+          <li><strong>Public classes</strong> — contain the parts of the module meant to be configured or customized by the user.</li>
+          <li><strong>Private classes</strong> — contain things you do not expect the user to change via parameters.</li>
+        </ul>
+        <p>Separating into public and private classes or defined types helps build reusable and readable code.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (Monolithic)</div>
+          <pre><code class="language-puppet">class everything {
+  # Manages NTP, Apache, Users,
+  # Firewall, SSH — all in one class!
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Single Purpose)</div>
+          <pre><code class="language-puppet">class profile::ntp { ... }
+class profile::apache { ... }
+class profile::users { ... }
+class profile::firewall { ... }</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #7 ===== -->
+<section id="ap7">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #7</span>
+      <h2>🚫 Putting Resource Declarations in Node Definitions</h2>
+
+      <h3>What It Is</h3>
+      <p>Placing complex logic, resource declarations, or conditional statements directly inside node definitions in <code>site.pp</code>.</p>
+
+      <h3>Why It Matters</h3>
+      <p>Although node definitions can contain almost any Puppet code, you should use them <strong>only to set variables and declare classes</strong>. Avoid putting resource declarations, collectors, conditional statements, chaining relationships, and functions in node definitions; all of these belong in classes or defined types.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix</h3>
+        <p>Keep node definitions <strong>minimal</strong>. Use them only to assign classes or set variables.</p>
+      </div>
+
+      <div class="code-compare">
+        <div class="code-block">
+          <div class="code-block-header bad">✘ Anti-Pattern (Logic in Node Defs)</div>
+          <pre><code class="language-puppet">node 'webserver01.example.com' {
+  file { '/etc/myapp.conf':
+    ensure  => file,
+    content => 'hardcoded content',
+  }
+  if $facts['os']['family'] == 'RedHat' {
+    package { 'httpd':
+      ensure => installed,
+    }
+  }
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header good">✔ Best Practice (Minimal Node Def)</div>
+          <pre><code class="language-puppet">node 'webserver01.example.com' {
+  include role::webserver
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ANTI-PATTERN #8 ===== -->
+<section id="ap8">
+  <div class="container">
+    <div class="ap-card animate-on-scroll">
+      <span class="ap-number">Anti-Pattern #8</span>
+      <h2>🚫 Ignoring Idempotency</h2>
+
+      <h3>What It Is</h3>
+      <p>Writing Puppet code that doesn't guarantee the same outcome when applied multiple times — meaning it causes changes on every run, even when the system is already in the desired state.</p>
+
+      <h3>Why It Matters</h3>
+      <p>A key feature of Puppet is its <strong>idempotency</strong>: the ability to repeatedly apply a manifest to guarantee a desired resource state on a system, with the same results every time. If a given resource is already in the desired state, Puppet performs no actions. If a given resource is not in the desired state, Puppet takes whatever action is necessary to put the resource into the desired state.</p>
+      <p>Idempotency enables Puppet to <strong>simulate resource changes</strong> without performing them, and lets you set up configuration management one time, fixing configuration drift without recreating resources from scratch each time Puppet runs.</p>
+
+      <div class="fix-callout">
+        <h3>✅ The Fix</h3>
+        <p>Use <strong>native Puppet resource types</strong> (which are inherently idempotent), and if using <code>exec</code>, always guard it with <code>onlyif</code>, <code>unless</code>, or <code>creates</code>. Test your manifests with <code>--noop</code> to confirm they don't report spurious changes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SUMMARY TABLE ===== -->
+<section id="summary">
+  <div class="container">
+    <div class="section-intro animate-on-scroll">
+      <h2>🌟 Why Addressing Anti-Patterns Matters</h2>
+      <p>Resolving these anti-patterns has a compounding positive effect on your entire Puppet implementation.</p>
+    </div>
+
+    <div class="summary-table-wrapper animate-on-scroll">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Anti-Pattern Removed</th>
+            <th>Benefit Gained</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Hardcoded data</td><td>Code becomes reusable across environments</td></tr>
+          <tr><td><code>exec</code> overuse</td><td>Infrastructure becomes truly idempotent</td></tr>
+          <tr><td>No roles/profiles</td><td>Node classification becomes scalable</td></tr>
+          <tr><td><code>params.pp</code></td><td>Module defaults become testable and clear</td></tr>
+          <tr><td>Duplicate resources</td><td>Catalog compilation becomes reliable</td></tr>
+          <tr><td>Monolithic classes</td><td>Modules become easier to test and maintain</td></tr>
+          <tr><td>Logic in node defs</td><td><code>site.pp</code> stays clean and auditable</td></tr>
+          <tr><td>Non-idempotent code</td><td>Puppet runs become predictable and trustworthy</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESOURCES ===== -->
+<section id="resources">
+  <div class="container">
+    <div class="section-intro animate-on-scroll">
+      <h2>📚 Resources</h2>
+      <p>Dive deeper into these topics with official Puppet documentation.</p>
+    </div>
+
+    <ul class="resources-list animate-on-scroll">
+      <li><a href="https://help.puppet.com/core/current/Content/PuppetCore/style_guide.htm" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Puppet Language Style Guide</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/hiera_intro.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Separating Data with Hiera</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/roles_and_profiles_method.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Roles and Profiles Method</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/roles_and_profiles_example.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Configuring Roles and Profiles</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/types/exec.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Resource Type: exec</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/lang_idempotency.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Understanding Idempotency</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/lang_node_definitions.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Node Definitions</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/lang_classes.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Defining Classes</a></li>
+      <li><a href="https://www.puppet.com/docs/puppet/latest/hiera_migrate_modules.html" target="_blank" rel="noopener noreferrer"><span class="link-icon">🔗</span>Adding Hiera Data to a Module</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== QUIZ ===== -->
+<section id="quiz">
+  <div class="container">
+    <div class="section-intro animate-on-scroll">
+      <h2>🧠 Knowledge Check</h2>
+      <p>Test your understanding of Puppet Anti-Patterns with these four questions.</p>
+    </div>
+
+    <div class="quiz-section animate-on-scroll">
+
+      <!-- Q1 -->
+      <div class="quiz-question" data-correct="C">
+        <h3>Question 1: What is the primary reason you should avoid hardcoding data directly in Puppet manifests?</h3>
+        <ul class="quiz-options">
+          <li><label><input type="radio" name="q1" value="A" /> A) It makes the Puppet agent run slower</label></li>
+          <li><label><input type="radio" name="q1" value="B" /> B) Puppet does not support string values</label></li>
+          <li><label><input type="radio" name="q1" value="C" /> C) It makes code less reusable and harder to configure across environments</label></li>
+          <li><label><input type="radio" name="q1" value="D" /> D) Hardcoded values cause catalog compilation to fail</label></li>
+        </ul>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="quiz-question" data-correct="B">
+        <h3>Question 2: Which of the following correctly makes an <code>exec</code> resource idempotent?</h3>
+        <ul class="quiz-options">
+          <li><label><input type="radio" name="q2" value="A" /> A) Adding <code>ensure =&gt; present</code> to the exec</label></li>
+          <li><label><input type="radio" name="q2" value="B" /> B) Using the <code>onlyif</code>, <code>unless</code>, or <code>creates</code> attribute</label></li>
+          <li><label><input type="radio" name="q2" value="C" /> C) Wrapping the exec in a class</label></li>
+          <li><label><input type="radio" name="q2" value="D" /> D) Setting <code>refreshonly =&gt; false</code></label></li>
+        </ul>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="quiz-question" data-correct="C">
+        <h3>Question 3: In the Roles and Profiles pattern, which layer is responsible for building a complete system configuration?</h3>
+        <ul class="quiz-options">
+          <li><label><input type="radio" name="q3" value="A" /> A) Component modules</label></li>
+          <li><label><input type="radio" name="q3" value="B" /> B) Profiles</label></li>
+          <li><label><input type="radio" name="q3" value="C" /> C) Roles</label></li>
+          <li><label><input type="radio" name="q3" value="D" /> D) Hiera</label></li>
+        </ul>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="quiz-question" data-correct="C">
+        <h3>Question 4: Why is the <code>params.pp</code> pattern considered an anti-pattern in modern Puppet?</h3>
+        <ul class="quiz-options">
+          <li><label><input type="radio" name="q4" value="A" /> A) It is not compatible with any version of Puppet</label></li>
+          <li><label><input type="radio" name="q4" value="B" /> B) It uses YAML files which Puppet cannot parse</label></li>
+          <li><label><input type="radio" name="q4" value="C" /> C) Class inheritance can have unpredictable effects and makes troubleshooting difficult</label></li>
+          <li><label><input type="radio" name="q4" value="D" /> D) It prevents the use of the exec resource type</label></li>
+        </ul>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <button class="quiz-submit-btn" id="quizSubmit">✅ Check My Answers</button>
+      <div class="quiz-result" id="quizResult"></div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT BANNER ===== -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-banner animate-on-scroll">
+      <h2>Questions or Need Help?</h2>
+      <p>Reach out to Puppet Education for additional guidance, deeper scenario exercises, or to explore how to refactor a real-world Puppet example.</p>
+      <a class="email-link" href="mailto:education.help@perforce.com">📧 education.help@perforce.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p><strong>Perforce Software, Inc.</strong> &copy; 2026 Perforce Software, Inc. All rights reserved.</p>
+  <p>Puppet Anti-Patterns: What They Are, Why They Matter, and How to Fix Them — On-Demand Lesson</p>
+</footer>
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  // Initialize Highlight.js
+  document.addEventListener('DOMContentLoaded', function () {
+    hljs.highlightAll();
+  });
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================================================
+     1. SCROLL-TRIGGERED ANIMATIONS
+     ================================================ */
+  var animElements = document.querySelectorAll('.animate-on-scroll');
+  var observerOpts = {
+    root: null,
+    rootMargin: '0px 0px -60px 0px',
+    threshold: 0.15
+  };
+
+  var scrollObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        scrollObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOpts);
+
+  animElements.forEach(function (el) {
+    scrollObserver.observe(el);
+  });
+
+  /* ================================================
+     2. TOPBAR SCROLL SHADOW
+     ================================================ */
+  var topbar = document.getElementById('topbar');
+
+  function handleTopbarShadow() {
+    if (!topbar) return;
+    if (window.scrollY > 20) {
+      topbar.classList.add('scrolled');
+    } else {
+      topbar.classList.remove('scrolled');
+    }
+  }
+
+  /* ================================================
+     3. PROGRESS BAR
+     ================================================ */
+  var progressBar = document.getElementById('progressBar');
+
+  function handleProgressBar() {
+    if (!progressBar) return;
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = scrollPercent + '%';
+  }
+
+  /* ================================================
+     4. ACTIVE NAV LINK HIGHLIGHTING
+     ================================================ */
+  var navLinks = document.querySelectorAll('.topbar-nav a');
+  var sections = [];
+
+  navLinks.forEach(function (link) {
+    var href = link.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      var target = document.querySelector(href);
+      if (target) {
+        sections.push({ el: target, link: link });
+      }
+    }
+  });
+
+  function handleActiveNav() {
+    var scrollPos = window.scrollY + 120;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollPos) {
+        navLinks.forEach(function (l) {
+          l.classList.remove('active');
+        });
+        sections[i].link.classList.add('active');
+        return;
+      }
+    }
+    // Default — activate first
+    navLinks.forEach(function (l) {
+      l.classList.remove('active');
+    });
+    if (navLinks.length) navLinks[0].classList.add('active');
+  }
+
+  /* ================================================
+     5. SMOOTH SCROLL FOR NAV LINKS
+     ================================================ */
+  navLinks.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        var target = document.querySelector(href);
+        if (target) {
+          var offsetTop = target.offsetTop - 80;
+          window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+
+  /* ================================================
+     6. COMBINED SCROLL HANDLER (debounced via rAF)
+     ================================================ */
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        handleTopbarShadow();
+        handleProgressBar();
+        handleActiveNav();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // Initial calls
+  handleTopbarShadow();
+  handleProgressBar();
+  handleActiveNav();
+
+  /* ================================================
+     7. QUIZ GRADING LOGIC
+     ================================================ */
+  var quizSubmitBtn = document.getElementById('quizSubmit');
+  var quizResult = document.getElementById('quizResult');
+
+  if (quizSubmitBtn) {
+    quizSubmitBtn.addEventListener('click', function () {
+      var questions = document.querySelectorAll('.quiz-question');
+      var totalCorrect = 0;
+      var totalQuestions = questions.length;
+
+      questions.forEach(function (q, idx) {
+        var correctAnswer = q.getAttribute('data-correct');
+        var questionName = 'q' + (idx + 1);
+        var selectedInput = q.querySelector('input[name="' + questionName + '"]:checked');
+        var feedbackEl = q.querySelector('.quiz-feedback');
+        var labels = q.querySelectorAll('.quiz-options label');
+
+        // Reset previous states
+        labels.forEach(function (label) {
+          label.classList.remove('correct', 'incorrect');
+        });
+        feedbackEl.classList.remove('show', 'correct-fb', 'incorrect-fb');
+        feedbackEl.textContent = '';
+
+        if (!selectedInput) {
+          feedbackEl.textContent = '⚠ Please select an answer.';
+          feedbackEl.classList.add('show', 'incorrect-fb');
+          return;
+        }
+
+        var selectedValue = selectedInput.value;
+        var selectedLabel = selectedInput.closest('label');
+
+        // Highlight correct answer
+        labels.forEach(function (label) {
+          var radio = label.querySelector('input[type="radio"]');
+          if (radio && radio.value === correctAnswer) {
+            label.classList.add('correct');
+          }
+        });
+
+        if (selectedValue === correctAnswer) {
+          totalCorrect++;
+          feedbackEl.textContent = '✅ Correct!';
+          feedbackEl.classList.add('show', 'correct-fb');
+        } else {
+          selectedLabel.classList.add('incorrect');
+          feedbackEl.textContent = '❌ Incorrect. The correct answer is highlighted above.';
+          feedbackEl.classList.add('show', 'incorrect-fb');
+        }
+      });
+
+      // Show overall result
+      if (quizResult) {
+        var pct = Math.round((totalCorrect / totalQuestions) * 100);
+        var resultColor, resultIcon, resultMsg;
+
+        if (pct === 100) {
+          resultColor = '#E8F5E9';
+          resultIcon = '🎉';
+          resultMsg = 'Perfect score!';
+        } else if (pct >= 75) {
+          resultColor = '#E8F5E9';
+          resultIcon = '👏';
+          resultMsg = 'Great job!';
+        } else if (pct >= 50) {
+          resultColor = '#FFF8E1';
+          resultIcon = '📖';
+          resultMsg = 'Review the lesson sections above and try again.';
+        } else {
+          resultColor = '#FDE8EC';
+          resultIcon = '💡';
+          resultMsg = 'Take another look at the anti-patterns above and retry.';
+        }
+
+        quizResult.style.background = resultColor;
+        quizResult.innerHTML = resultIcon + ' You scored <strong>' + totalCorrect + ' / ' + totalQuestions + '</strong> (' + pct + '%). ' + resultMsg;
+        quizResult.classList.add('show');
+
+        // Scroll result into view
+        quizResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      // Change button text after first attempt
+      quizSubmitBtn.innerHTML = '🔄 Re-Check My Answers';
+    });
+  }
+
+})();
+</script>
+
+</body>
+</html>

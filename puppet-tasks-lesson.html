@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What Are Puppet Tasks? | Perforce Puppet Education</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Highlight.js Default Theme (for code blocks) -->
+  <style>
+    /* highlight.js default */
+    pre code.hljs{display:block;overflow-x:auto;padding:1em}
+    code.hljs{padding:3px 5px}
+    .hljs{background:#1e2230;color:#c9d1d9}
+    .hljs-comment{color:#697070}
+    .hljs-punctuation,.hljs-tag{color:#c9d1d9}
+    .hljs-tag .hljs-attr,.hljs-tag .hljs-name{color:#c9d1d9}
+    .hljs-attribute,.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-name,.hljs-selector-tag{font-weight:700;color:#ff7b72}
+    .hljs-deletion,.hljs-number,.hljs-quote,.hljs-selector-class,.hljs-selector-id,.hljs-string,.hljs-template-tag,.hljs-type{color:#a5d6ff}
+    .hljs-section,.hljs-title{color:#d2a8ff;font-weight:700}
+    .hljs-link,.hljs-operator,.hljs-regexp,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-symbol,.hljs-template-variable,.hljs-variable{color:#ffa657}
+    .hljs-literal{color:#79c0ff}
+    .hljs-addition,.hljs-built_in,.hljs-bullet,.hljs-code{color:#7ee787}
+    .hljs-meta{color:#1f7199}
+    .hljs-meta .hljs-string{color:#38a}
+    .hljs-emphasis{font-style:italic}
+    .hljs-strong{font-weight:700}
+  </style>
+
+  <style>
+    /* ============================================
+       CSS CUSTOM PROPERTIES — Perforce Brand
+       ============================================ */
+    :root {
+      /* Perforce brand palette */
+      --pf-indigo:   #3C1053;
+      --pf-navy:     #102B3F;
+      --pf-cyan:     #00B4D8;
+      --pf-mint:     #2DC5A1;
+      --pf-light-grey: #F5F5F7;
+      --pf-white:    #FFFFFF;
+
+      /* Extended palette */
+      --pf-indigo-light: #5C2D82;
+      --pf-navy-light:   #1B3F5C;
+      --pf-cyan-dark:    #0096B7;
+      --pf-text:         #2D2D2D;
+      --pf-text-light:   #555555;
+      --pf-border:       #E0E0E0;
+      --pf-code-bg:      #1e2230;
+
+      /* Fonts */
+      --font-heading: 'Gibson', 'Open Sans', Arial, Helvetica, sans-serif;
+      --font-body:    'Open Sans', Arial, Helvetica, sans-serif;
+
+      /* Spacing */
+      --section-pad: 80px 0;
+      --container-width: 960px;
+    }
+
+    /* ============================================
+       FONT-FACE — Gibson (local/system fallback)
+       ============================================ */
+    @font-face {
+      font-family: 'Gibson';
+      src: local('Gibson SemiBold'), local('Gibson-SemiBold');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Gibson';
+      src: local('Gibson Bold'), local('Gibson-Bold');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Gibson';
+      src: local('Gibson Regular'), local('Gibson-Regular');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* ============================================
+       RESET & BASE
+       ============================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--pf-text);
+      background: var(--pf-white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 { font-family: var(--font-heading); line-height: 1.25; }
+
+    img { max-width: 100%; }
+
+    a { color: var(--pf-cyan); text-decoration: none; transition: color .2s; }
+    a:hover { color: var(--pf-cyan-dark); }
+
+    /* ============================================
+       TOPBAR
+       ============================================ */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--pf-white);
+      border-bottom: 1px solid var(--pf-border);
+      transition: box-shadow .3s ease;
+    }
+    .topbar.scrolled { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .topbar-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 32px;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 14px; }
+    .topbar-brand img { height: 32px; }
+    .topbar-brand span {
+      font-family: var(--font-heading); font-weight: 600; font-size: 15px;
+      color: var(--pf-navy); letter-spacing: .3px;
+    }
+    .topbar-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+    .topbar-nav a {
+      font-size: 13px; font-weight: 600; padding: 6px 14px;
+      border-radius: 6px; color: var(--pf-text-light);
+      transition: background .2s, color .2s;
+    }
+    .topbar-nav a:hover,
+    .topbar-nav a.active {
+      background: var(--pf-indigo); color: var(--pf-white);
+    }
+
+    /* Progress bar */
+    .progress-track {
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+      height: 3px; background: var(--pf-border);
+    }
+    .progress-bar {
+      height: 100%; width: 0;
+      background: linear-gradient(90deg, var(--pf-cyan), var(--pf-mint));
+      transition: width .15s linear;
+    }
+
+    /* ============================================
+       CONTAINER
+       ============================================ */
+    .container {
+      max-width: var(--container-width);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ============================================
+       HERO
+       ============================================ */
+    .hero {
+      padding: 160px 0 100px;
+      background: linear-gradient(135deg, var(--pf-indigo) 0%, var(--pf-navy) 100%);
+      color: var(--pf-white);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(0,180,216,.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(45,197,161,.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero .container { position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 20px; padding: 6px 20px;
+      font-size: 13px; font-weight: 600; letter-spacing: .5px;
+      text-transform: uppercase; margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 700; margin-bottom: 24px;
+    }
+    .hero p {
+      font-size: 1.15rem; max-width: 680px; margin: 0 auto 36px;
+      opacity: .9; line-height: 1.8;
+    }
+    .hero-meta {
+      display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+      font-size: .95rem; opacity: .85;
+    }
+    .hero-meta span { display: flex; align-items: center; gap: 8px; }
+
+    /* ============================================
+       SECTIONS — GENERAL
+       ============================================ */
+    .section { padding: var(--section-pad); }
+    .section-alt { background: var(--pf-light-grey); }
+
+    .section-label {
+      display: inline-block; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--pf-cyan); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--pf-navy); margin-bottom: 20px;
+    }
+    .section-intro {
+      font-size: 1.05rem; color: var(--pf-text-light);
+      max-width: 720px; margin-bottom: 40px; line-height: 1.8;
+    }
+
+    /* ============================================
+       CARDS
+       ============================================ */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; margin-top: 8px;
+    }
+    .card {
+      background: var(--pf-white);
+      border: 1px solid var(--pf-border);
+      border-radius: 12px; padding: 32px 28px;
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+    .section-alt .card { background: var(--pf-white); }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+    .card-icon {
+      font-size: 2rem; margin-bottom: 16px; display: block;
+    }
+    .card h3 {
+      font-family: var(--font-heading); font-size: 1.1rem;
+      color: var(--pf-navy); margin-bottom: 10px;
+    }
+    .card p { font-size: .95rem; color: var(--pf-text-light); line-height: 1.7; }
+
+    /* ============================================
+       CODE BLOCKS
+       ============================================ */
+    .code-block-wrapper {
+      margin: 28px 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    }
+    .code-block-header {
+      background: #161926;
+      padding: 10px 20px;
+      font-family: var(--font-heading);
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: rgba(255,255,255,.5);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .code-block-header .lang-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--pf-cyan);
+    }
+    .code-block-wrapper pre {
+      margin: 0; border-radius: 0;
+    }
+    .code-block-wrapper pre code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 14px; line-height: 1.65;
+    }
+
+    /* ============================================
+       CALLOUT / INFO BOX
+       ============================================ */
+    .callout {
+      background: linear-gradient(135deg, rgba(60,16,83,.04), rgba(0,180,216,.06));
+      border-left: 4px solid var(--pf-cyan);
+      border-radius: 0 10px 10px 0;
+      padding: 24px 28px; margin: 32px 0;
+    }
+    .callout-title {
+      font-family: var(--font-heading); font-weight: 700;
+      color: var(--pf-navy); margin-bottom: 8px; font-size: 1rem;
+    }
+    .callout p { font-size: .95rem; color: var(--pf-text-light); line-height: 1.7; }
+
+    /* ============================================
+       STEPS / NUMBERED
+       ============================================ */
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      position: relative; padding-left: 56px; margin-bottom: 32px;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0; top: 2px;
+      width: 38px; height: 38px;
+      background: var(--pf-indigo); color: var(--pf-white);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: .95rem;
+    }
+    .steps li h3 {
+      font-family: var(--font-heading); font-size: 1.1rem;
+      color: var(--pf-navy); margin-bottom: 6px;
+    }
+    .steps li p { font-size: .95rem; color: var(--pf-text-light); line-height: 1.7; }
+
+    /* ============================================
+       USE CASE PILLS
+       ============================================ */
+    .pill-grid {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px;
+    }
+    .pill {
+      background: var(--pf-white);
+      border: 1px solid var(--pf-border);
+      border-radius: 30px; padding: 10px 22px;
+      font-size: .9rem; font-weight: 600; color: var(--pf-navy);
+      display: flex; align-items: center; gap: 8px;
+      transition: border-color .2s, background .2s;
+    }
+    .pill:hover { border-color: var(--pf-cyan); background: rgba(0,180,216,.04); }
+
+    /* ============================================
+       RESOURCES BOX
+       ============================================ */
+    .resources-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; margin-top: 12px;
+    }
+    .resource-link {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 20px 24px; background: var(--pf-white);
+      border: 1px solid var(--pf-border); border-radius: 10px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .resource-link:hover {
+      border-color: var(--pf-cyan);
+      box-shadow: 0 4px 12px rgba(0,180,216,.08);
+    }
+    .resource-link .res-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+    .resource-link .res-text strong {
+      display: block; font-size: .95rem; color: var(--pf-navy); margin-bottom: 4px;
+    }
+    .resource-link .res-text span { font-size: .85rem; color: var(--pf-text-light); }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    .site-footer {
+      background: var(--pf-navy);
+      color: rgba(255,255,255,.6);
+      text-align: center; padding: 40px 32px;
+      font-size: .85rem;
+    }
+    .site-footer strong { color: var(--pf-white); font-weight: 600; }
+
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
+    .animate-on-scroll {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity .6s ease-out, transform .6s ease-out;
+    }
+    .animate-on-scroll.visible {
+      opacity: 1; transform: translateY(0);
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+      .topbar-nav { display: none; }
+      .hero { padding: 130px 0 70px; }
+      .section { padding: 60px 0; }
+      .container { padding: 0 20px; }
+      .hero-meta { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       TOPBAR
+       ============================================ -->
+  <nav class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-nav">
+        <a href="#hero" class="active">Overview</a>
+        <a href="#what">What Are Tasks?</a>
+        <a href="#why">Why Tasks Matter</a>
+        <a href="#how">How Tasks Work</a>
+        <a href="#example">Example</a>
+        <a href="#usecases">Use Cases</a>
+        <a href="#resources">Resources</a>
+      </div>
+    </div>
+  </nav>
+  <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+  <!-- ============================================
+       HERO
+       ============================================ -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-badge">On-Demand Lesson</div>
+      <h1>🔧 What Are Puppet Tasks?</h1>
+      <p>
+        Learn how Bolt tasks let you run single, on-demand actions across your
+        infrastructure — complementing Puppet's declarative model with powerful
+        imperative capabilities when you need them most.
+      </p>
+      <div class="hero-meta">
+        <span>📚 Self-Paced</span>
+        <span>🎯 Beginner–Intermediate</span>
+        <span>🛠 Live Code Examples</span>
+        <span>⏱ ~15 Minutes</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 1 — WHAT ARE PUPPET TASKS?
+       ============================================ -->
+  <section class="section" id="what">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Concept</span>
+        <h2 class="section-title">What Are Puppet Tasks?</h2>
+        <p class="section-intro">
+          Bolt tasks are single actions that you can run on target nodes in your
+          infrastructure, allowing you to make as-needed changes to remote systems.
+          You can run tasks with the Puppet Enterprise (PE) orchestrator or with
+          Puppet's standalone task runner, Bolt.
+        </p>
+      </div>
+
+      <div class="card-grid animate-on-scroll">
+        <div class="card">
+          <span class="card-icon">📜</span>
+          <h3>Script-Like, but Better</h3>
+          <p>
+            Bolt tasks are similar to scripts, but they are kept in modules and can
+            have metadata. This allows you to reuse and share them across your
+            organization instead of scattering one-off scripts.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <h3>Run via PE or Bolt</h3>
+          <p>
+            Execute tasks through the Puppet Enterprise orchestrator for
+            enterprise-grade orchestration, or use Bolt as a lightweight, agentless
+            task runner for quick ad-hoc actions.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">📦</span>
+          <h3>Module-Based</h3>
+          <p>
+            Tasks live inside Puppet modules alongside classes, plans, and other
+            content. This makes them easy to version, distribute via the Forge,
+            and integrate into existing workflows.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout animate-on-scroll" style="margin-top:40px;">
+        <div class="callout-title">💡 Declarative vs. Imperative</div>
+        <p>
+          Puppet manifests manage ongoing state (declarative), while tasks handle
+          one-off, imperative actions — making them a powerful complement in real
+          environments. Think of manifests as "this is how things <strong>should</strong>
+          be" and tasks as "do this <strong>right now</strong>."
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 2 — WHY TASKS MATTER
+       ============================================ -->
+  <section class="section section-alt" id="why">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Motivation</span>
+        <h2 class="section-title">💡 Why Do Tasks Matter?</h2>
+        <p class="section-intro">
+          Sometimes you need to do arbitrary tasks in your infrastructure that
+          aren't about enforcing the state of machines. You might need to restart
+          a service, run a troubleshooting script, or get a list of the network
+          connections to a given node. Tasks let you do exactly that.
+        </p>
+      </div>
+
+      <div class="card-grid animate-on-scroll">
+        <div class="card">
+          <span class="card-icon">🔁</span>
+          <h3>Restart Services</h3>
+          <p>
+            Quickly bounce a service on one or many nodes without writing or
+            modifying a Puppet manifest. Ideal for post-deployment restarts or
+            incident response.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔍</span>
+          <h3>Troubleshoot Servers</h3>
+          <p>
+            Run diagnostic scripts across your fleet to gather logs, check
+            connectivity, or inspect system state — all from a central point.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🌐</span>
+          <h3>Inspect Network Connections</h3>
+          <p>
+            Get a real-time list of network connections to a given node. Tasks
+            give you on-demand visibility without permanent agents or monitoring
+            changes.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">⚡</span>
+          <h3>Complement Declarative Code</h3>
+          <p>
+            Tasks fill the gap where Puppet's declarative model isn't the right
+            fit. One-off patches, data migrations, cache flushes — tasks handle
+            the imperative work cleanly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 3 — HOW TASKS WORK
+       ============================================ -->
+  <section class="section" id="how">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Deep Dive</span>
+        <h2 class="section-title">⚙️ How Do Tasks Work?</h2>
+        <p class="section-intro">
+          Tasks are executable files stored in Puppet modules. They can be written
+          in any language the target supports, carry JSON metadata for parameter
+          validation, and accept input in multiple ways.
+        </p>
+      </div>
+
+      <ol class="steps animate-on-scroll">
+        <!-- Step 1 -->
+        <li>
+          <h3>Writing a Task</h3>
+          <p>
+            You can write tasks in any programming language the targets run, such
+            as <strong>Bash</strong>, <strong>PowerShell</strong>, or
+            <strong>Python</strong>. A task can even be a compiled binary that
+            runs on the target. Place your task in the
+            <code>./tasks</code> directory of a module and add a metadata file to
+            describe parameters and configure task behavior.
+          </p>
+        </li>
+
+        <!-- Step 2 -->
+        <li>
+          <h3>Naming a Task</h3>
+          <p>
+            Task names are composed of one or two name segments indicating:
+          </p>
+          <ul style="margin:10px 0 10px 20px; color: var(--pf-text-light); font-size:.95rem; line-height:1.7;">
+            <li>The <strong>name of the module</strong> where the task is located.</li>
+            <li>The <strong>name of the task file</strong>, without the extension.</li>
+          </ul>
+          <p>
+            For example, in the <code>puppetlabs/mysql</code> module, the
+            <code>sql</code> task is located at
+            <code>./mysql/tasks/sql.rb</code>, so the task name is
+            <strong>mysql::sql</strong>.
+          </p>
+        </li>
+
+        <!-- Step 3 -->
+        <li>
+          <h3>Task Metadata</h3>
+          <p>
+            Task metadata files describe task parameters, validate input, and
+            control how Bolt executes the task. Your task
+            <strong>must have metadata</strong> to be published and shared on the
+            Forge. Specify task metadata in a JSON file with the naming convention
+            <code>&lt;TASKNAME&gt;.json</code>, placed in the module's
+            <code>./tasks</code> folder alongside your task file.
+          </p>
+
+          <div class="code-block-wrapper" style="margin-top:20px;">
+            <div class="code-block-header">
+              <span class="lang-dot"></span> JSON — metadata example
+            </div>
+            <pre><code class="language-json">{
+  "description": "Display a custom message",
+  "parameters": {
+    "message": {
+      "description": "The message to display",
+      "type": "String"
+    }
+  }
+}</code></pre>
+          </div>
+        </li>
+
+        <!-- Step 4 -->
+        <li>
+          <h3>Passing Parameters</h3>
+          <p>
+            Tasks can receive input as either <strong>environment variables</strong>,
+            a <strong>JSON hash on standard input</strong>, or as
+            <strong>PowerShell arguments</strong>. By default, Bolt submits
+            parameters as both environment variables and as JSON on stdin.
+          </p>
+          <div class="callout" style="margin-top:16px;">
+            <div class="callout-title">📌 The PT_ Prefix Convention</div>
+            <p>
+              To add a parameter to your task as an environment variable, pass the
+              argument prefixed with <code>PT_</code>. For example, to add a
+              <code>message</code> parameter, read it in your task code as
+              <code>PT_message</code>. When a user runs the task, they specify the
+              value on the command line as <code>message=hello</code>, and the task
+              runner submits the value <code>hello</code> to the
+              <code>PT_message</code> variable.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 4 — EXAMPLE
+       ============================================ -->
+  <section class="section section-alt" id="example">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Hands-On</span>
+        <h2 class="section-title">📝 Example: A Simple Bash Task</h2>
+        <p class="section-intro">
+          Below is a minimal Bash task that reads a parameter called
+          <code>message</code> and echoes it back. This demonstrates the core
+          pattern: receive a parameter via the <code>PT_</code> environment
+          variable, then act on it.
+        </p>
+      </div>
+
+      <div class="animate-on-scroll">
+        <div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span class="lang-dot"></span> Bash — tasks/message.sh
+          </div>
+          <pre><code class="language-bash">#!/usr/bin/env bash
+# A simple Puppet Bolt task that echoes a user-supplied message.
+# The parameter "message" is received via the PT_ prefix convention.
+
+echo "Your message is: $PT_message"</code></pre>
+        </div>
+      </div>
+
+      <div class="callout animate-on-scroll" style="margin-top:32px;">
+        <div class="callout-title">🧪 How It Works Step-by-Step</div>
+        <p>
+          <strong>1.</strong> The user runs the task and passes <code>message=hello</code>
+          on the command line.<br>
+          <strong>2.</strong> Bolt connects to the target node (via SSH or WinRM).<br>
+          <strong>3.</strong> Bolt uploads the script and sets the environment variable
+          <code>PT_message=hello</code>.<br>
+          <strong>4.</strong> The script executes and outputs:
+          <code>Your message is: hello</code>
+        </p>
+      </div>
+
+      <div class="animate-on-scroll" style="margin-top:36px;">
+        <h3 style="font-family:var(--font-heading);color:var(--pf-navy);margin-bottom:16px;">
+          Running a Task with Bolt
+        </h3>
+        <p style="color:var(--pf-text-light);margin-bottom:16px;font-size:.95rem;line-height:1.7;">
+          Use the <code>bolt task run</code> command followed by the fully qualified
+          task name and the target(s). Here's an example that runs the built-in
+          <code>puppet_agent::version</code> task locally:
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span class="lang-dot" style="background:var(--pf-mint);"></span> Shell
+          </div>
+          <pre><code class="language-bash"># Run the puppet_agent::version task against localhost
+bolt task run puppet_agent::version --targets localhost
+
+# Run our custom message task against a remote node
+bolt task run mymodule::message message=hello --targets webserver01.example.com</code></pre>
+        </div>
+      </div>
+
+      <div class="animate-on-scroll" style="margin-top:36px;">
+        <h3 style="font-family:var(--font-heading);color:var(--pf-navy);margin-bottom:16px;">
+          Module Directory Structure
+        </h3>
+        <p style="color:var(--pf-text-light);margin-bottom:16px;font-size:.95rem;line-height:1.7;">
+          A well-structured task module looks like this. The task file and its
+          matching JSON metadata live together in the <code>./tasks</code> directory.
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span class="lang-dot" style="background:#ffa657;"></span> File Structure
+          </div>
+          <pre><code>mymodule/
+├── metadata.json
+├── manifests/
+│   └── init.pp
+└── tasks/
+    ├── message.sh          # The task script (Bash)
+    └── message.json        # Task metadata (parameters, description)</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 5 — REAL-WORLD USE CASES
+       ============================================ -->
+  <section class="section" id="usecases">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">In Practice</span>
+        <h2 class="section-title">🌍 Real-World Use Cases</h2>
+        <p class="section-intro">
+          You can use Bolt to patch and update systems, troubleshoot servers,
+          deploy applications, or stop and restart services. Below are common
+          scenarios where tasks shine.
+        </p>
+      </div>
+
+      <div class="pill-grid animate-on-scroll">
+        <div class="pill">🔄 Patch &amp; Update Systems</div>
+        <div class="pill">🐛 Troubleshoot Servers</div>
+        <div class="pill">🚀 Deploy Applications</div>
+        <div class="pill">🛑 Stop &amp; Restart Services</div>
+        <div class="pill">🧹 Flush Caches</div>
+        <div class="pill">📊 Gather System Facts</div>
+        <div class="pill">🔐 Rotate Secrets &amp; Credentials</div>
+        <div class="pill">📋 Run Compliance Checks</div>
+      </div>
+
+      <div class="callout animate-on-scroll" style="margin-top:40px;">
+        <div class="callout-title">🎯 When to Use Tasks vs. Manifests</div>
+        <p>
+          <strong>Use manifests</strong> when you want to declare and continuously
+          enforce the desired state of a system (e.g., "package X must always be
+          installed").<br><br>
+          <strong>Use tasks</strong> when you need a one-time imperative action
+          (e.g., "restart service Y right now" or "pull the latest deployment
+          artifact"). They are complementary — not competing — tools in a
+          Puppet-managed environment.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 6 — KEY TAKEAWAYS
+       ============================================ -->
+  <section class="section section-alt" id="takeaways">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Summary</span>
+        <h2 class="section-title">Key Takeaways</h2>
+      </div>
+
+      <div class="card-grid animate-on-scroll">
+        <div class="card" style="border-top:3px solid var(--pf-indigo);">
+          <span class="card-icon">01</span>
+          <h3>Tasks = On-Demand Actions</h3>
+          <p>
+            Bolt tasks are single actions you run on targets. They complement
+            Puppet's declarative manifests by handling imperative, one-off work.
+          </p>
+        </div>
+        <div class="card" style="border-top:3px solid var(--pf-cyan);">
+          <span class="card-icon">02</span>
+          <h3>Any Language, Any Target</h3>
+          <p>
+            Write tasks in Bash, PowerShell, Python, Ruby, or even ship a
+            compiled binary. If the target can run it, Bolt can deliver it.
+          </p>
+        </div>
+        <div class="card" style="border-top:3px solid var(--pf-mint);">
+          <span class="card-icon">03</span>
+          <h3>Metadata Makes Tasks Shareable</h3>
+          <p>
+            JSON metadata describes parameters, validates input, and is required
+            to publish tasks on the Puppet Forge for community reuse.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION 7 — RESOURCES
+       ============================================ -->
+  <section class="section" id="resources">
+    <div class="container">
+      <div class="animate-on-scroll">
+        <span class="section-label">Learn More</span>
+        <h2 class="section-title">📚 Additional Resources</h2>
+        <p class="section-intro">
+          Continue your Puppet Tasks learning journey with these official
+          resources from Puppet and Perforce.
+        </p>
+      </div>
+
+      <div class="resources-grid animate-on-scroll">
+        <a href="https://www.puppet.com/docs/bolt/latest/bolt_running_tasks.html"
+           target="_blank" rel="noopener noreferrer" class="resource-link">
+          <span class="res-icon">📖</span>
+          <div class="res-text">
+            <strong>Running Tasks with Bolt</strong>
+            <span>Official Puppet Bolt documentation on task execution.</span>
+          </div>
+        </a>
+        <a href="https://www.puppet.com/docs/bolt/latest/writing_tasks.html"
+           target="_blank" rel="noopener noreferrer" class="resource-link">
+          <span class="res-icon">✍️</span>
+          <div class="res-text">
+            <strong>Writing Tasks</strong>
+            <span>Guide to authoring tasks, metadata, and parameter handling.</span>
+          </div>
+        </a>
+        <a href="https://www.puppet.com/docs/pe/latest/running_tasks_in_pe.html"
+           target="_blank" rel="noopener noreferrer" class="resource-link">
+          <span class="res-icon">🏢</span>
+          <div class="res-text">
+            <strong>Tasks in Puppet Enterprise</strong>
+            <span>Running and managing tasks via the PE console and orchestrator.</span>
+          </div>
+        </a>
+        <a href="https://forge.puppet.com/"
+           target="_blank" rel="noopener noreferrer" class="resource-link">
+          <span class="res-icon">🔍</span>
+          <div class="res-text">
+            <strong>Puppet Forge</strong>
+            <span>Browse community modules with pre-built tasks you can use today.</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer class="site-footer">
+    <strong>Perforce Software, Inc.</strong> &copy; 2026 All rights reserved.<br>
+    Puppet Education &middot; On-Demand Learning &middot;
+    <a href="mailto:matt.shroyer@perforce.com" style="color:var(--pf-cyan);">matt.shroyer@perforce.com</a>
+  </footer>
+  <!-- ============================================
+       HIGHLIGHT.JS — CDN (Bash + JSON support)
+       ============================================ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/json.min.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* =============================================
+       1. HIGHLIGHT.JS INITIALIZATION
+       ============================================= */
+    hljs.highlightAll();
+
+    /* =============================================
+       2. SCROLL-TRIGGERED ANIMATIONS
+       ============================================= */
+    var animElements = document.querySelectorAll('.animate-on-scroll');
+    var observerOpts = {
+      root: null,
+      rootMargin: '0px 0px -60px 0px',
+      threshold: 0.15
+    };
+
+    var scrollObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          scrollObserver.unobserve(entry.target);
+        }
+      });
+    }, observerOpts);
+
+    animElements.forEach(function (el) {
+      scrollObserver.observe(el);
+    });
+
+    /* =============================================
+       3. TOPBAR SCROLL SHADOW
+       ============================================= */
+    var topbar = document.getElementById('topbar');
+
+    function handleTopbarShadow() {
+      if (window.scrollY > 20) {
+        topbar.classList.add('scrolled');
+      } else {
+        topbar.classList.remove('scrolled');
+      }
+    }
+
+    /* =============================================
+       4. PROGRESS BAR
+       ============================================= */
+    var progressBar = document.getElementById('progressBar');
+
+    function handleProgressBar() {
+      var scrollTop = window.scrollY;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      progressBar.style.width = scrollPercent + '%';
+    }
+
+    /* =============================================
+       5. ACTIVE NAV LINK HIGHLIGHTING
+       ============================================= */
+    var navLinks = document.querySelectorAll('.topbar-nav a');
+    var sections = [];
+
+    navLinks.forEach(function (link) {
+      var href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        var target = document.querySelector(href);
+        if (target) {
+          sections.push({ el: target, link: link });
+        }
+      }
+    });
+
+    function handleActiveNav() {
+      var scrollPos = window.scrollY + 120;
+      for (var i = sections.length - 1; i >= 0; i--) {
+        if (sections[i].el.offsetTop <= scrollPos) {
+          navLinks.forEach(function (l) {
+            l.classList.remove('active');
+          });
+          sections[i].link.classList.add('active');
+          return;
+        }
+      }
+      navLinks.forEach(function (l) {
+        l.classList.remove('active');
+      });
+      if (navLinks.length) {
+        navLinks[0].classList.add('active');
+      }
+    }
+
+    /* =============================================
+       6. SMOOTH SCROLL FOR NAV LINKS
+       ============================================= */
+    navLinks.forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var href = this.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          var target = document.querySelector(href);
+          if (target) {
+            var offsetTop = target.offsetTop - 80;
+            window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+          }
+        }
+      });
+    });
+
+    /* =============================================
+       7. STAGGER ANIMATION FOR CARD GRIDS
+       ============================================= */
+    function staggerChildren(parentSelector, childSelector, delayMs) {
+      var parents = document.querySelectorAll(parentSelector);
+      parents.forEach(function (parent) {
+        var children = parent.querySelectorAll(childSelector);
+        var staggerObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              children.forEach(function (child, index) {
+                child.style.transitionDelay = (index * delayMs) + 'ms';
+                child.classList.add('visible');
+              });
+              staggerObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1 });
+        staggerObserver.observe(parent);
+      });
+    }
+
+    staggerChildren('.card-grid', '.card', 120);
+    staggerChildren('.pill-grid', '.pill', 80);
+    staggerChildren('.resources-grid', '.resource-link', 100);
+
+    /* Apply base hidden state to staggered children */
+    var staggeredSelectors = ['.card', '.pill', '.resource-link'];
+    staggeredSelectors.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(24px)';
+        el.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+      });
+    });
+
+    /* Inject visible state rule for staggered items */
+    var styleTag = document.createElement('style');
+    styleTag.textContent =
+      '.card.visible, .pill.visible, .resource-link.visible ' +
+      '{ opacity: 1 !important; transform: translateY(0) !important; }';
+    document.head.appendChild(styleTag);
+
+    /* =============================================
+       8. COMBINED SCROLL HANDLER (rAF-debounced)
+       ============================================= */
+    var ticking = false;
+
+    window.addEventListener('scroll', function () {
+      if (!ticking) {
+        window.requestAnimationFrame(function () {
+          handleTopbarShadow();
+          handleProgressBar();
+          handleActiveNav();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    /* Initial calls */
+    handleTopbarShadow();
+    handleProgressBar();
+    handleActiveNav();
+
+  })();
+  </script>
+
+</body>
+</html>

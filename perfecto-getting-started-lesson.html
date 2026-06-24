@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Getting Started with Perfecto AI for Functional Testing | Perforce Education</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/gibson@5.1.0/400.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/gibson@5.1.0/600.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/gibson@5.1.0/700.min.css" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   0. CSS CUSTOM PROPERTIES (Perforce brand)
+   ============================================================ */
+:root {
+  --clr-indigo:     #4B0082;
+  --clr-navy:       #0D1B2A;
+  --clr-cyan:       #00BFFF;
+  --clr-mint:       #3EB489;
+  --clr-light-grey: #F4F5F7;
+  --clr-white:      #FFFFFF;
+  --clr-text:       #1E1E2F;
+  --clr-text-muted: #555568;
+  --clr-border:     #D5D7DE;
+  --clr-accent:     #00BFFF;
+  --clr-accent-soft:#E6F9FF;
+  --clr-success:    #3EB489;
+  --clr-warn:       #F5A623;
+  --clr-danger:     #E94B4B;
+  --clr-code-bg:    #F8F8FA;
+  --clr-perfecto-green: #82BC41;
+
+  --ff-heading: 'Gibson', 'Open Sans', system-ui, sans-serif;
+  --ff-body:    'Open Sans', system-ui, sans-serif;
+
+  --fs-hero:  clamp(2rem, 4vw, 3.25rem);
+  --fs-h1:    clamp(1.75rem, 3vw, 2.5rem);
+  --fs-h2:    clamp(1.35rem, 2.4vw, 1.85rem);
+  --fs-h3:    clamp(1.1rem, 1.8vw, 1.4rem);
+  --fs-body:  1rem;
+  --fs-small: 0.875rem;
+
+  --space-xs:  0.5rem;
+  --space-sm:  1rem;
+  --space-md:  1.75rem;
+  --space-lg:  3rem;
+  --space-xl:  5rem;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --shadow-card: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-topbar: 0 2px 16px rgba(0,0,0,.10);
+
+  --max-width: 960px;
+}
+
+/* ============================================================
+   1. RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+
+body {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  color: var(--clr-text);
+  background: var(--clr-white);
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: var(--clr-cyan); text-decoration: none; transition: color .2s; }
+a:hover { color: var(--clr-indigo); }
+
+/* ============================================================
+   2. TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3, h4 {
+  font-family: var(--ff-heading);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--clr-navy);
+}
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); margin-bottom: var(--space-sm); }
+h3 { font-size: var(--fs-h3); margin-bottom: var(--space-xs); }
+
+p + p { margin-top: var(--space-sm); }
+
+/* ============================================================
+   3. LAYOUT HELPERS
+   ============================================================ */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+.section {
+  padding: var(--space-xl) 0;
+}
+.section--alt {
+  background: var(--clr-light-grey);
+}
+.section-label {
+  display: inline-block;
+  font-family: var(--ff-heading);
+  font-weight: 600;
+  font-size: var(--fs-small);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--clr-cyan);
+  margin-bottom: var(--space-xs);
+}
+
+/* ============================================================
+   4. TOP BAR + PROGRESS
+   ============================================================ */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 900;
+  background: var(--clr-white);
+  transition: box-shadow .3s;
+}
+#topbar.scrolled {
+  box-shadow: var(--shadow-topbar);
+}
+.topbar-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem var(--space-md);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ff-heading);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--clr-navy);
+}
+.topbar-brand svg { flex-shrink: 0; }
+.topbar-nav {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  overflow-x: auto;
+}
+.topbar-nav a {
+  font-family: var(--ff-heading);
+  font-weight: 600;
+  font-size: var(--fs-small);
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+}
+.topbar-nav a:hover,
+.topbar-nav a.active {
+  color: var(--clr-cyan);
+  border-bottom-color: var(--clr-cyan);
+}
+#progressBar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--clr-cyan), var(--clr-mint));
+  z-index: 999;
+  transition: width .15s ease-out;
+}
+
+/* Hide nav labels on narrow viewports */
+@media (max-width: 740px) {
+  .topbar-nav { display: none; }
+}
+
+/* ============================================================
+   5. HERO
+   ============================================================ */
+.hero {
+  padding: calc(var(--space-xl) + 56px) 0 var(--space-xl);
+  background: linear-gradient(160deg, var(--clr-navy) 0%, #122340 50%, var(--clr-indigo) 100%);
+  color: var(--clr-white);
+  text-align: center;
+}
+.hero h1 {
+  font-size: var(--fs-hero);
+  color: var(--clr-white);
+  margin-bottom: var(--space-xs);
+}
+.hero .subtitle {
+  font-family: var(--ff-heading);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 400;
+  color: rgba(255,255,255,.80);
+  max-width: 700px;
+  margin: 0 auto var(--space-md);
+}
+.hero-meta {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-top: var(--space-sm);
+}
+.hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-small);
+  color: rgba(255,255,255,.72);
+}
+
+/* ============================================================
+   6. LEARNING OBJECTIVES CARD
+   ============================================================ */
+.objectives-card {
+  background: var(--clr-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-md) var(--space-md);
+  margin-top: calc(-1 * var(--space-lg));
+  position: relative;
+  z-index: 10;
+}
+.objectives-card h2 {
+  color: var(--clr-navy);
+  margin-bottom: var(--space-sm);
+}
+.objectives-list {
+  list-style: none;
+  counter-reset: obj;
+}
+.objectives-list li {
+  counter-increment: obj;
+  padding: 0.6rem 0 0.6rem 2.6rem;
+  position: relative;
+  border-bottom: 1px solid var(--clr-border);
+  font-size: var(--fs-body);
+}
+.objectives-list li:last-child { border-bottom: none; }
+.objectives-list li::before {
+  content: counter(obj);
+  position: absolute;
+  left: 0; top: 0.55rem;
+  width: 28px; height: 28px;
+  background: var(--clr-accent-soft);
+  color: var(--clr-cyan);
+  font-family: var(--ff-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   7. CARDS (Why-Cards pattern)
+   ============================================================ */
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+.info-card {
+  background: var(--clr-white);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-card);
+  transition: transform .3s, box-shadow .3s;
+}
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 24px rgba(0,0,0,.10);
+}
+.info-card .card-icon {
+  font-size: 1.6rem;
+  margin-bottom: var(--space-xs);
+}
+.info-card h3 { color: var(--clr-navy); }
+
+/* ============================================================
+   8. TABLE STYLES
+   ============================================================ */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  margin: var(--space-sm) 0 var(--space-md);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.styled-table thead {
+  background: var(--clr-navy);
+  color: var(--clr-white);
+}
+.styled-table th,
+.styled-table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--clr-border);
+  vertical-align: top;
+}
+.styled-table tbody tr:nth-child(even) {
+  background: var(--clr-light-grey);
+}
+.styled-table code {
+  background: var(--clr-code-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--clr-indigo);
+}
+
+/* ============================================================
+   9. CODE BLOCKS
+   ============================================================ */
+pre.code-block {
+  background: #1E1E2F;
+  color: #D4D4D4;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  margin: var(--space-sm) 0 var(--space-md);
+}
+pre.code-block .kw  { color: #C586C0; }
+pre.code-block .fn  { color: #DCDCAA; }
+pre.code-block .str { color: #CE9178; }
+pre.code-block .cm  { color: #6A9955; font-style: italic; }
+pre.code-block .num { color: #B5CEA8; }
+pre.code-block .op  { color: #D4D4D4; }
+pre.code-block .var { color: #9CDCFE; }
+
+/* ============================================================
+   10. CALLOUT / TIP / KEY INSIGHT
+   ============================================================ */
+.callout {
+  border-left: 4px solid var(--clr-cyan);
+  background: var(--clr-accent-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  margin: var(--space-md) 0;
+  font-size: var(--fs-body);
+}
+.callout.callout--insight {
+  border-left-color: var(--clr-mint);
+  background: #EAFAF3;
+}
+.callout.callout--warn {
+  border-left-color: var(--clr-warn);
+  background: #FFF9EE;
+}
+.callout .callout-title {
+  font-family: var(--ff-heading);
+  font-weight: 700;
+  color: var(--clr-navy);
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   11. COMPARISON COLUMNS (Script vs NL)
+   ============================================================ */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0 var(--space-md);
+}
+@media (max-width: 600px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+.compare-col {
+  background: var(--clr-light-grey);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+.compare-col.compare-col--bad  { border-top: 3px solid var(--clr-danger); }
+.compare-col.compare-col--good { border-top: 3px solid var(--clr-success); }
+.compare-col h4 {
+  font-size: var(--fs-small);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: var(--space-xs);
+}
+
+/* ============================================================
+   12. SCROLL-TRIGGERED ANIMATIONS
+   ============================================================ */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .6s ease-out, transform .6s ease-out;
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   13. EXERCISE BLOCK
+   ============================================================ */
+.exercise-block {
+  background: var(--clr-white);
+  border: 2px solid var(--clr-cyan);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin: var(--space-md) 0;
+}
+.exercise-block h4 {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-h3);
+  color: var(--clr-navy);
+  margin-bottom: var(--space-xs);
+}
+
+/* ============================================================
+   14. FOOTER
+   ============================================================ */
+footer {
+  background: var(--clr-navy);
+  color: rgba(255,255,255,.65);
+  text-align: center;
+  padding: var(--space-md) var(--space-md);
+  font-size: var(--fs-small);
+}
+footer a { color: var(--clr-cyan); }
+
+/* ============================================================
+   15. SUMMARY TABLE (side-by-side)
+   ============================================================ */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  margin: var(--space-sm) 0 var(--space-md);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.summary-table thead { background: var(--clr-navy); color: #fff; }
+.summary-table th, .summary-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--clr-border);
+  text-align: left;
+}
+.summary-table tbody tr:nth-child(even) { background: var(--clr-light-grey); }
+
+/* ============================================================
+   16. PRINCIPLE CARDS
+   ============================================================ */
+.principle-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+.principle-card {
+  background: var(--clr-light-grey);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-left: 4px solid var(--clr-cyan);
+}
+.principle-card strong {
+  display: block;
+  font-family: var(--ff-heading);
+  color: var(--clr-navy);
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   17. PRINT
+   ============================================================ */
+@media print {
+  #topbar, #progressBar { display: none; }
+  .hero { padding-top: var(--space-lg); }
+  .section { padding: var(--space-md) 0; }
+  .animate-on-scroll { opacity: 1 !important; transform: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ PROGRESS BAR ============ -->
+<div id="progressBar"></div>
+
+<!-- ============ TOP BAR ============ -->
+<nav id="topbar" aria-label="Lesson navigation">
+  <div class="topbar-inner">
+    <ul class="topbar-nav">
+      <li><a href="#hero">Overview</a></li>
+      <li><a href="#mod1">What Is Perfecto AI</a></li>
+      <li><a href="#mod2">Paradigm Shift</a></li>
+      <li><a href="#mod3">Translating Tests</a></li>
+      <li><a href="#mod4">Best Practices</a></li>
+      <li><a href="#mod5">Visual Comparison</a></li>
+      <li><a href="#mod6">Summary</a></li>
+      <li><a href="#exercises">Exercises</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============ HERO SECTION ============ -->
+<header class="hero" id="hero">
+  <div class="container">
+    <p class="section-label" style="color:rgba(255,255,255,.55);">Perforce Education — Self-Paced Lesson</p>
+    <h1>Getting Started with Perfecto&nbsp;AI for Functional Testing</h1>
+    <p class="subtitle">Transitioning from Script-Based Tests to Natural Language Testing</p>
+    <div class="hero-meta">
+      <span>📘 6 Modules</span>
+      <span>🧪 3 Practice Exercises</span>
+      <span>🎯 All Skill Levels</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ LEARNING OBJECTIVES ============ -->
+<section class="section">
+  <div class="container">
+    <div class="objectives-card animate-on-scroll">
+      <h2>🎯 Learning Objectives</h2>
+      <p style="margin-bottom:var(--space-sm); color:var(--clr-text-muted);">By the end of this lesson, you will be able to:</p>
+      <ol class="objectives-list">
+        <li>Explain what Perfecto AI is and how it changes the functional testing paradigm.</li>
+        <li>Distinguish between traditional script-based testing and natural language AI-driven testing.</li>
+        <li>Translate script-based test scenarios into effective natural language test steps.</li>
+        <li>Apply best practices for writing clear, unambiguous natural language validations and user actions.</li>
+        <li>Recognize when and how to leverage the AI Assistant to refine test inputs.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 1 ============ -->
+<section class="section section--alt" id="mod1">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 1</p>
+    <h2 class="animate-on-scroll">What Is Perfecto AI?</h2>
+
+    <!-- 1.1 Overview -->
+    <div class="animate-on-scroll">
+      <h3>1.1&ensp;Overview</h3>
+      <p>Perfecto offers AI-based features for test creation and test execution. The use of AI in software testing removes traditional testing barriers to help testing teams achieve new levels of agility, reliability, and breakthrough advancements. AI-based features enable testers of <strong>every skill level</strong>, allowing for simplified test creation, faster debugging, enhanced collaboration, and the elimination of test maintenance.</p>
+      <p>Perfecto AI, powered by Perforce Intelligence, delivers <strong>up to 70% efficiency gains</strong> with zero scripts, frameworks, or maintenance. This represents a fundamental shift: Perforce launched a breakthrough in <em>agentic AI testing</em> with the ability to turn plain language inputs into resilient, execution-ready test actions.</p>
+      <p>With one input, users can now validate applications across <strong>web, Android, and iOS</strong> — without object locators, code, or maintenance.</p>
+    </div>
+
+    <!-- 1.2 Where to Access -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <h3>1.2&ensp;Where to Access Perfecto AI</h3>
+      <p>You can access Perfecto's AI-based testing features through: <strong>AI commands in AI Scriptless</strong>, and <strong>AI-powered functions in your Appium scripts</strong>, available as part of Perfecto extensions. AI Scriptless allows you to automate mobile application testing without writing tests. You can design and execute tests using a visual interface, predefined actions, and AI-powered test generation.</p>
+
+      <div class="callout callout--warn">
+        <p class="callout-title">📋 Licensing Note</p>
+        <p>The interface name and available features depend on your license configuration: If your cloud environment includes both the <strong>Perfecto AI license</strong> and the <strong>Desktop Web license</strong>, the interface is labeled <em>AI Scriptless</em> and supports test creation for both mobile and desktop web applications using natural language commands. If one or both of these licenses are not included, the interface is labeled <em>Scriptless Mobile</em> and supports mobile testing only.</p>
+      </div>
+    </div>
+
+    <!-- 1.3 The Three AI Commands -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <h3>1.3&ensp;The Three AI Commands</h3>
+      <p>Use the following AI Scriptless AI commands when creating natural-language test steps that work independently of object locators, UI language, or dynamic content. You write the Perfecto AI-powered test once and can run it on all devices and operating systems.</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>AI Command</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>AI Validation</strong></td>
+            <td>Assert or validate what appears on-screen using a natural language question with a PASS/FAIL outcome</td>
+          </tr>
+          <tr>
+            <td><strong>AI User Action</strong></td>
+            <td>Perform user interactions (tap, type, navigate) described in natural language</td>
+          </tr>
+          <tr>
+            <td><strong>AI Visual Comparison</strong></td>
+            <td>Compare two device screens like a human tester would, detecting visual differences</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+<!-- ============ MODULE 2 ============ -->
+<section class="section" id="mod2">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 2</p>
+    <h2 class="animate-on-scroll">Understanding the Paradigm Shift</h2>
+
+    <!-- 2.1 Why Script-Based Tests Are Fragile -->
+    <div class="animate-on-scroll">
+      <h3>2.1&ensp;Why Script-Based Tests Are Fragile</h3>
+      <p>In traditional functional testing, tests are built on <strong>object locators</strong> (XPath, CSS selectors, accessibility IDs) tied directly to UI elements. When the UI changes — even cosmetically — these locators break and tests fail.</p>
+      <p>Testing continues to be a main blocker in DevOps and the automation of application delivery. Siloed tools, flaky tests, UI instability, test data bottlenecks, and triage delays create unsustainable costs and inefficiencies.</p>
+      <p>Many testing companies have turned to AI copilots, which generate scripts based on prompts. But those scripts still require frameworks, setup, and constant maintenance — often <strong>amplifying the very maintenance burden</strong> teams are trying to eliminate.</p>
+    </div>
+
+    <!-- 2.2 How Natural Language Changes Everything -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <h3>2.2&ensp;How Natural Language Changes Everything</h3>
+      <p>The AI-based commands available in AI Scriptless and the AI functions available for use in Appium tests allow you to use <strong>natural language, in any language</strong>, just like in a conversation. This opens up new possibilities, such as writing complex validations that may combine multiple traditional commands into a single command or may even reach beyond what is possible with scripting, thereby <strong>expanding test coverage</strong>.</p>
+      <p>AI commands also allow you to overcome the fragility of traditional test scripts because they let you use different mechanisms for validating elements on the screen, are <strong>platform agnostic</strong>, and adapt to UI changes.</p>
+    </div>
+
+    <!-- 2.3 Think Like a Human -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <h3>2.3&ensp;Think Like a Human, Not Like a Machine</h3>
+
+      <div class="compare-grid">
+        <div class="compare-col compare-col--bad">
+          <h4>❌ Traditional Approach</h4>
+          <p>Traditional functional test automation uses and is aligned with actual elements in the GUI on the open device screen — buttons, text entry fields, drop-down menus. A test developer needs to assess the screen structure and create a logical meaning between different GUI elements and the required logic under test.</p>
+        </div>
+        <div class="compare-col compare-col--good">
+          <h4>✅ Perfecto AI Approach</h4>
+          <p>Unlike computer code, humans approach a device screen <strong>semantically</strong>: they break what they see down into logical meaning and match the logical, semantic understanding with visual representation. This is exactly how Perfecto AI works. AI validations use the same approach.</p>
+        </div>
+      </div>
+
+      <div class="callout callout--insight">
+        <p class="callout-title">💡 Key Insight</p>
+        <p>Perfecto AI interprets screens the way a human does — semantically — rather than relying on brittle DOM structures. You describe <em>what</em> you see, not <em>how</em> the machine should find it.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ MODULE 3 ============ -->
+<section class="section section--alt" id="mod3">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 3</p>
+    <h2 class="animate-on-scroll">Translating Script-Based Tests to Natural Language</h2>
+    <p class="animate-on-scroll" style="color:var(--clr-text-muted); margin-bottom:var(--space-md);">This is where the real mindset shift happens. Below are side-by-side comparisons showing how traditional script-based test steps translate into natural language Perfecto AI steps.</p>
+
+    <!-- 3.1 Login Validation -->
+    <div class="animate-on-scroll">
+      <h3>3.1&ensp;Example: Login Validation (Banking App)</h3>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>Step</th><th>Script-Based Approach (Pseudo-Code)</th><th>Natural Language (Perfecto AI)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Navigate</strong></td>
+            <td><code>driver.get("https://bank.example.com")</code></td>
+            <td>AI User Action: <em>"Open the banking app and navigate to the login page."</em></td>
+          </tr>
+          <tr>
+            <td><strong>Enter username</strong></td>
+            <td><code>driver.findElement(By.id("username")).sendKeys("john_doe")</code></td>
+            <td>AI User Action: <em>"Enter 'john_doe' in the username field."</em></td>
+          </tr>
+          <tr>
+            <td><strong>Enter password</strong></td>
+            <td><code>driver.findElement(By.id("password")).sendKeys("P@ss123")</code></td>
+            <td>AI User Action: <em>"Enter 'P@ss123' in the password field."</em></td>
+          </tr>
+          <tr>
+            <td><strong>Click login</strong></td>
+            <td><code>driver.findElement(By.xpath("//button[@id='login-btn']")).click()</code></td>
+            <td>AI User Action: <em>"Click the login button."</em></td>
+          </tr>
+          <tr>
+            <td><strong>Validate balance</strong></td>
+            <td><code>String bal = driver.findElement(By.xpath("//text[3]")).getText();<br>assertEquals(bal, "$15,678.62");</code></td>
+            <td>AI Validation: <em>"Is the available balance equal to $15,678.62?"</em></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--insight">
+        <p class="callout-title">🔑 Key Insight</p>
+        <p>The script-based approach depends on precise locators (<code>By.id</code>, <code>By.xpath</code>) that can break when the UI changes. The natural language approach describes the <strong>intent</strong> — what a human tester would do and verify.</p>
+      </div>
+    </div>
+
+    <!-- 3.2 Online Bookstore Validation -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>3.2&ensp;Example: Online Bookstore Validation</h3>
+      <p style="margin-bottom:var(--space-sm); color:var(--clr-text-muted);">Based on real Perfecto AI examples:</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>Script-Based Approach</th><th>Natural Language (Perfecto AI)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>assert driver.findElement(By.css(".rating")).getText().equals("4.5")</code></td>
+            <td><em>"What is the book rating and does it equal 4.5?"</em></td>
+          </tr>
+          <tr>
+            <td><code>assert driver.findElement(By.css(".badge.bestseller")).isDisplayed()</code></td>
+            <td><em>"Is the book marked as best seller?"</em></td>
+          </tr>
+          <tr>
+            <td><code>assert driver.findElement(By.css(".delivery-location")).getText().contains("Mumbai")</code></td>
+            <td><em>"Is the book delivered to Mumbai?"</em></td>
+          </tr>
+          <tr>
+            <td><code>List&lt;WebElement&gt; books = driver.findElements(By.css(".author-name"));<br>assert books.stream().anyMatch(...)</code></td>
+            <td><em>"Is there a book written by Freida McFadden available?"</em></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3.3 Complex Data Comparison -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>3.3&ensp;Example: Complex Data Comparison (Banking)</h3>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>Script-Based Approach</th><th>Natural Language (Perfecto AI)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>String deposit = driver.findElement(By.id("deposit-val")).getText();<br>String withdrawal = driver.findElement(By.id("withdrawal-val")).getText();<br>assert parseDouble(deposit) > parseDouble(withdrawal);</code></td>
+            <td><em>"Is the online deposit amount greater than the online withdrawal amount?"</em></td>
+          </tr>
+          <tr>
+            <td><code>// Parse chart SVG, extract bar values, find max, compare...<br>// (Often 20+ lines of code)</code></td>
+            <td><em>"Does the graph show Individual Savings as the biggest value?"</em></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--insight">
+        <p class="callout-title">🔑 Key Insight</p>
+        <p>What might require <strong>dozens of lines of code</strong> to parse chart data, extract SVG values, and perform comparisons collapses into a <strong>single natural language question</strong> that the AI can evaluate visually — just as a human would.</p>
+      </div>
+    </div>
+
+    <!-- 3.4 User Actions — Form Filling -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>3.4&ensp;Example: User Actions — Form Filling</h3>
+      <p style="margin-bottom:var(--space-sm);">Instead of filling each field as a separate action, write one prompt combining several value inputs. Then tell the Assistant to click the submit button as a separate action.</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>Script-Based Approach</th><th>Natural Language (Perfecto AI)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>driver.findElement(By.id("username")).sendKeys("John");<br>
+              driver.findElement(By.id("lastname")).sendKeys("Doe");<br>
+              Select yearDropdown = new Select(driver.findElement(By.id("year")));<br>
+              yearDropdown.selectByValue("2001");<br>
+              driver.findElement(By.id("submit")).click();</code>
+            </td>
+            <td>
+              <strong>AI User Action 1:</strong> <em>"Fill in username John, last name Doe, year 2001"</em><br><br>
+              <strong>AI User Action 2:</strong> <em>"Submit the form"</em>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p class="callout-title">💡 Tip</p>
+        <p>Combine related field inputs into a single AI User Action for efficiency, but keep distinct interactions (like form submission) as separate steps for clarity and reliability.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- ============ MODULE 4 ============ -->
+<section class="section" id="mod4">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 4</p>
+    <h2 class="animate-on-scroll">Rethinking Your Test Approach for Natural Language</h2>
+    <p class="animate-on-scroll" style="color:var(--clr-text-muted); margin-bottom:var(--space-md);">The transition from scripting to natural language is not just a tooling change — it requires a shift in how you think about describing tests. Here are the critical considerations:</p>
+
+    <!-- 4.1 Questions vs. Validations -->
+    <div class="animate-on-scroll">
+      <h3>4.1&ensp;Questions vs. Validations</h3>
+      <p>Make sure you understand the difference between a question and a validation:</p>
+      <ul style="margin: var(--space-sm) 0 var(--space-sm) 1.5rem; line-height: 1.85;">
+        <li><strong>A question (or query)</strong> is an open-ended question (what, who, where, when, why, how) where the answer can be any value from the device screen, and is <strong>not</strong> a validation.</li>
+        <li><strong>A validation</strong> is a special type of question with a <strong>binary answer: yes or no, PASS or FAIL.</strong> When it comes to automated testing, a validation or assertion is the primary way to decide whether something is as expected.</li>
+      </ul>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>❌ Open-ended Question (Not a Validation)</th><th>✅ Proper Validation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><em>"How much is the account balance?"</em></td>
+            <td><em>"Is the account balance equal to $22?"</em></td>
+          </tr>
+          <tr>
+            <td><em>"What's the color of the button?"</em></td>
+            <td><em>"Is the color of the login button green?"</em></td>
+          </tr>
+          <tr>
+            <td><em>"Whose name appears in the top left?"</em></td>
+            <td><em>"Does the user name Joe appear in the app header?"</em></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--insight">
+        <p class="callout-title">💡 Reflection Point</p>
+        <p>When you write a script-based <code>assertEquals</code>, you already know the expected value. In natural language, you must state that expected value <strong>explicitly</strong> in the form of a binary question.</p>
+      </div>
+    </div>
+
+    <!-- 4.2 Be Specific, Not Ambiguous -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.2&ensp;Be Specific, Not Ambiguous</h3>
+      <p>Asking the right questions is one of the biggest challenges with free and open text validations. Consider this pizza menu example:</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>Prompt</th><th>Problem</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><em>"Does the pizza cost $80?"</em></td>
+            <td>Too ambiguous — which pizza?</td>
+            <td><span style="color:var(--clr-warn); font-weight:700;">Unpredictable</span></td>
+          </tr>
+          <tr>
+            <td><em>"Is there a pizza that costs $80?"</em></td>
+            <td>Clear — asks about <strong>any</strong> pizza</td>
+            <td><span style="color:var(--clr-success); font-weight:700;">✅ PASS</span></td>
+          </tr>
+          <tr>
+            <td><em>"Do all pizzas cost $80?"</em></td>
+            <td>Clear — asks about <strong>all</strong></td>
+            <td><span style="color:var(--clr-danger); font-weight:700;">✅ NO (FAIL)</span></td>
+          </tr>
+          <tr>
+            <td><em>"Does the Golden corn pizza cost $80?"</em></td>
+            <td>Clear — specific pizza named</td>
+            <td><span style="color:var(--clr-success); font-weight:700;">✅ YES (PASS)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4.3 Describe the Goal, Not the Mechanics -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.3&ensp;Describe the Goal, Not the Mechanics</h3>
+      <p>When you define test scripts traditionally as actions applied to locators, the test script breaks every time a UI element changes. Using the AI Assistant, you can describe the logical task in the same way as when talking to a manual tester.</p>
+
+      <table class="styled-table">
+        <thead>
+          <tr><th>❌ Don't (Mechanical)</th><th>✅ Do (Goal-Oriented)</th><th>Why?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><em>"Move the mouse to the button labeled Cart in the bottom right corner"</em></td>
+            <td><em>"On the profile page, open the shopping cart."</em></td>
+            <td>Describe the logical goal. Do not refer to locators or labels that can change during development.</td>
+          </tr>
+          <tr>
+            <td><em>"Fill in the form"</em></td>
+            <td><em>"Enter 'Jill A. Smith' in the name fields. Enter Main street 1 in NYC, USA, as the address."</em></td>
+            <td>Don't be vague. Provide enough details for the AI Assistant to repeat the task consistently.</td>
+          </tr>
+          <tr>
+            <td><em>"Click the red shoes."</em></td>
+            <td><em>"From the search results, select the red sneakers that cost $30."</em></td>
+            <td>Don't be ambiguous. Use specific words when the UI may contain several similar elements.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4.4 Leverage the AI Assistant -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.4&ensp;Leverage the AI Assistant to Refine Your Prompts</h3>
+      <p>To get the most out of AI-based commands, when working with AI Scriptless, consider using the <strong>AI Assistant</strong>, at least in the beginning. The AI Assistant will respond to your input and may provide suggestions to help hone your input for the desired result.</p>
+
+      <div class="info-cards" style="margin-top:var(--space-sm);">
+        <div class="info-card">
+          <div class="card-icon">🔄</div>
+          <h3>Transforms Questions</h3>
+          <p>Converts generic questions into more objective validation formats for reliable PASS/FAIL outcomes.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">✏️</div>
+          <h3>Corrects &amp; Clarifies</h3>
+          <p>Corrects grammar and typos to improve test readability and consistency across your test suite.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">🌐</div>
+          <h3>Multilingual Support</h3>
+          <p>Works in almost any language. If English is not your language of choice, you may phrase the AI validation in any other language.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">🎯</div>
+          <h3>Objectivity Score</h3>
+          <p>Displays an objectivity score (<span style="color:var(--clr-success);font-weight:700;">green</span>, <span style="color:var(--clr-warn);font-weight:700;">yellow</span>, or <span style="color:var(--clr-danger);font-weight:700;">red</span>) to indicate validation robustness.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.5 Write Once, Run Everywhere -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.5&ensp;Write Once, Run Everywhere</h3>
+      <p>Once you have fine-tuned the instructions, you can even run the same Scriptless test across a <strong>variety of devices</strong> and validate the same test steps on them. This saves time otherwise spent with repetitive test development and duplicated maintenance.</p>
+      <p>Since you do not refer to device-dependent UI elements, the AI Assistant interprets the instructions relative to <strong>what it sees on the device screen</strong>.</p>
+
+      <div class="callout">
+        <p class="callout-title">⚡ Cross-Platform Power</p>
+        <p>One natural language test — validated across web, Android, and iOS — without rewriting a single step.</p>
+      </div>
+    </div>
+
+    <!-- 4.6 Handle Dynamic Conditions Gracefully -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.6&ensp;Handle Dynamic Conditions Gracefully</h3>
+      <p>If your app is affected by irregular network latency, or a procedure is disrupted by a modal dialog, a hard-coded script can miss its cue. Instead, tell the AI Assistant to wait, to attempt to repeat an action until it is successful, to dismiss any modal dialog, or to wait for a progress bar to finish.</p>
+
+      <div class="compare-grid">
+        <div class="compare-col compare-col--bad">
+          <h4>❌ Hard-Coded Script</h4>
+          <p>A fixed <code>Thread.sleep(5000)</code> or a brittle explicit wait tied to an XPath that may not exist yet.</p>
+        </div>
+        <div class="compare-col compare-col--good">
+          <h4>✅ Natural Language</h4>
+          <p><em>"Wait for the login button to appear, and then continue."</em></p>
+          <p style="margin-top:var(--space-xs);"><em>"Dismiss any pop-up dialog if one appears."</em></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4.7 Keep Actions Manageable -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>4.7&ensp;Keep Actions Manageable</h3>
+
+      <div class="callout callout--warn">
+        <p class="callout-title">⏱ Performance Guideline</p>
+        <p>For optimal performance, phrase each User Action so it does not resolve to more than <strong>15 steps</strong> and so that it takes less than <strong>3 minutes</strong>. Break complex workflows into logical, manageable steps.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ MODULE 5 ============ -->
+<section class="section section--alt" id="mod5">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 5</p>
+    <h2 class="animate-on-scroll">AI Visual Comparison — A New Testing Dimension</h2>
+
+    <div class="animate-on-scroll">
+      <p>Beyond validations and user actions, Perfecto AI offers a capability that would be <strong>extremely complex</strong> to build in traditional scripts:</p>
+      <p style="margin-top:var(--space-sm);">The <strong>AI Visual Comparison</strong> command compares two device screens like a human tester would. The assistant detects and describes visual differences in test result screenshots, and fails the test if the differences are in certain categories.</p>
+    </div>
+
+    <!-- Detection Categories -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <h3>Detection Categories</h3>
+      <div class="info-cards" style="margin-top:var(--space-sm);">
+        <div class="info-card">
+          <div class="card-icon">🎨</div>
+          <h3>Style</h3>
+          <p>Font, color, and alignment changes between screenshots.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">🔢</div>
+          <h3>Value</h3>
+          <p>Text or numeric data changes detected across screens.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">🚫</div>
+          <h3>Missing Elements</h3>
+          <p>Elements present in the baseline but absent in the comparison screen.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">↔️</div>
+          <h3>Moved Elements</h3>
+          <p>Elements that have shifted position between the two screens.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">➕</div>
+          <h3>Additions</h3>
+          <p>New elements that appear in the comparison screen but not in the baseline.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon">⚠️</div>
+          <h3>Errors</h3>
+          <p>Overlapping elements, error messages, and other visual anomalies.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="animate-on-scroll" style="margin-top:var(--space-md);">
+      <div class="callout callout--insight">
+        <p class="callout-title">💡 Traditional vs. AI Visual Testing</p>
+        <p>This kind of visual regression testing would traditionally require pixel-comparison libraries with extensive custom configuration — now it's handled <strong>semantically by AI</strong>. The AI understands <em>what</em> changed and <em>why it matters</em>, not just that pixels differ.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- ============ MODULE 6 ============ -->
+<section class="section" id="mod6">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Module 6</p>
+    <h2 class="animate-on-scroll">Summary &amp; Key Takeaways</h2>
+
+    <!-- Comparison Table -->
+    <div class="animate-on-scroll">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Traditional Script-Based Testing</th>
+            <th>Perfecto AI Natural Language Testing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Depends on locators (XPath, CSS, IDs)</td>
+            <td><strong>Locator-free</strong>, describes intent</td>
+          </tr>
+          <tr>
+            <td>Breaks when UI changes</td>
+            <td><strong>Adapts</strong> to UI changes automatically</td>
+          </tr>
+          <tr>
+            <td>Platform-specific test code</td>
+            <td><strong>Write once</strong>, run across web, Android, iOS</td>
+          </tr>
+          <tr>
+            <td>Requires coding expertise</td>
+            <td>Accessible to testers of <strong>all skill levels</strong></td>
+          </tr>
+          <tr>
+            <td>Complex validations = complex code</td>
+            <td>Complex validations = <strong>one clear sentence</strong></td>
+          </tr>
+          <tr>
+            <td>Maintenance-heavy</td>
+            <td><strong>Zero maintenance</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Key Principles -->
+    <div class="animate-on-scroll" style="margin-top:var(--space-lg);">
+      <h3>Key Principles for the Transition</h3>
+      <div class="principle-cards">
+        <div class="principle-card">
+          <strong>🎯 Think in Outcomes</strong>
+          Describe <em>what</em> you want to verify, not how to find it. Focus on outcomes, not DOM elements.
+        </div>
+        <div class="principle-card">
+          <strong>✅ Write Binary Validations</strong>
+          Phrase everything as a yes/no, PASS/FAIL assertion. The AI needs a clear binary to evaluate.
+        </div>
+        <div class="principle-card">
+          <strong>🔍 Be Specific &amp; Unambiguous</strong>
+          Name the exact element, value, or condition you're testing. Eliminate room for misinterpretation.
+        </div>
+        <div class="principle-card">
+          <strong>🗣️ Describe Goals, Not Mechanics</strong>
+          Say what a manual tester would understand, not what a machine would execute.
+        </div>
+        <div class="principle-card">
+          <strong>🤖 Use the AI Assistant</strong>
+          Iterate with it to sharpen your prompts, especially when starting out. Let it guide your phrasing.
+        </div>
+        <div class="principle-card">
+          <strong>🧩 Keep Actions Atomic</strong>
+          Break complex workflows into logical, manageable steps — no more than 15 sub-steps per action.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ PRACTICE EXERCISES ============ -->
+<section class="section section--alt" id="exercises">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Practice</p>
+    <h2 class="animate-on-scroll">Practice Exercises</h2>
+    <p class="animate-on-scroll" style="color:var(--clr-text-muted); margin-bottom:var(--space-md);">Apply what you've learned. Try each exercise, then click to reveal guidance.</p>
+
+    <!-- Exercise 1 -->
+    <div class="exercise-block animate-on-scroll">
+      <h4>Exercise 1: Convert Script to Natural Language</h4>
+      <p style="margin-bottom:var(--space-sm);">Given this script-based test step:</p>
+
+      <pre class="code-block"><span class="var">WebElement</span> price = driver.<span class="fn">findElement</span>(<span class="var">By</span>.<span class="fn">xpath</span>(<span class="str">"//div[@class='product-price']/span[2]"</span>));
+<span class="fn">assertEquals</span>(price.<span class="fn">getText</span>(), <span class="str">"$49.99"</span>);</pre>
+
+      <p><strong>Your task:</strong> Write an equivalent Perfecto AI Validation in natural language.</p>
+
+      <details style="margin-top:var(--space-sm);">
+        <summary style="cursor:pointer; font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan);">💡 Reveal Hint &amp; Guidance</summary>
+        <div style="padding:var(--space-sm) 0 0;">
+          <p><strong>Hint:</strong> Think about what the user actually sees and how you'd describe the check to a colleague.</p>
+          <div class="callout callout--insight" style="margin-top:var(--space-xs);">
+            <p class="callout-title">Example Answer</p>
+            <p><em>"Is the product price equal to $49.99?"</em></p>
+            <p style="margin-top:4px;">Notice how you describe the <strong>visible intent</strong> — not the XPath path or DOM structure. If you can be more specific (e.g., name the product), even better.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Exercise 2 -->
+    <div class="exercise-block animate-on-scroll">
+      <h4>Exercise 2: Write an Ambiguity-Free Validation</h4>
+      <p>You are testing a flight booking app that shows departure and arrival times for multiple flights.</p>
+      <p style="margin-top:var(--space-xs);"><strong>Your task:</strong> Write a natural language validation to confirm that <strong>Flight AA-204 departs at 3:45 PM</strong>.</p>
+
+      <details style="margin-top:var(--space-sm);">
+        <summary style="cursor:pointer; font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan);">💡 Reveal Hint &amp; Guidance</summary>
+        <div style="padding:var(--space-sm) 0 0;">
+          <p><strong>Consider:</strong> What makes this specific enough for the AI to consistently return the correct answer?</p>
+          <div class="callout callout--insight" style="margin-top:var(--space-xs);">
+            <p class="callout-title">Example Answer</p>
+            <p><em>"Does Flight AA-204 show a departure time of 3:45 PM?"</em></p>
+            <p style="margin-top:4px;">By naming the <strong>specific flight number</strong> and stating the <strong>exact expected value</strong>, you remove ambiguity — even if many flights are displayed on screen.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Exercise 3 -->
+    <div class="exercise-block animate-on-scroll">
+      <h4>Exercise 3: Describe a Multi-Step User Action</h4>
+      <p><strong>Your task:</strong> Write a natural language AI User Action to complete a checkout process: select VISA as payment, enter card number <code>4111-1111-1111-1111</code>, set expiry to <code>12/27</code>, and confirm the purchase.</p>
+
+      <details style="margin-top:var(--space-sm);">
+        <summary style="cursor:pointer; font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan);">💡 Reveal Hint &amp; Guidance</summary>
+        <div style="padding:var(--space-sm) 0 0;">
+          <p><strong>Remember:</strong> Describe the goal, provide specific details, and don't reference UI mechanics.</p>
+          <div class="callout callout--insight" style="margin-top:var(--space-xs);">
+            <p class="callout-title">Example Answer</p>
+            <p><strong>AI User Action 1:</strong> <em>"Select VISA as the payment method. Enter card number 4111-1111-1111-1111 and set the expiry date to 12/27."</em></p>
+            <p style="margin-top:4px;"><strong>AI User Action 2:</strong> <em>"Confirm and complete the purchase."</em></p>
+            <p style="margin-top:4px;">Grouping the payment detail entry as one action and the confirmation as a separate step follows the <strong>atomic actions</strong> principle while keeping the workflow readable.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ ADDITIONAL RESOURCES ============ -->
+<section class="section" id="resources">
+  <div class="container">
+
+    <p class="section-label animate-on-scroll">Resources</p>
+    <h2 class="animate-on-scroll">Additional Resources</h2>
+
+    <div class="info-cards animate-on-scroll" style="margin-top:var(--space-sm);">
+      <a href="https://help.perfecto.io/perfecto-help/content/perfecto/automation-testing/ai_commands_faq.htm" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">❓</div>
+        <h3>AI Commands FAQ</h3>
+        <p>Frequently asked questions about AI Scriptless commands, licensing, and supported platforms.</p>
+        <span style="display:inline-block; margin-top:var(--space-xs); font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan); font-size:var(--fs-small);">Read FAQ →</span>
+      </a>
+      <a href="https://help.perfecto.io/perfecto-help/content/perfecto/automation-testing/ai_validations_best_practices.htm" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">✅</div>
+        <h3>Best Practices for AI Validations</h3>
+        <p>Guidance on writing effective, unambiguous AI Validations that return consistent results.</p>
+        <span style="display:inline-block; margin-top:var(--space-xs); font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan); font-size:var(--fs-small);">Read Guide →</span>
+      </a>
+      <a href="https://help.perfecto.io/perfecto-help/content/perfecto/automation-testing/ai_user_actions_best_practices.htm" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration:none; color:inherit;">
+        <div class="card-icon">🖱️</div>
+        <h3>Best Practices for AI User Actions</h3>
+        <p>Tips for describing goal-oriented user actions that the AI can execute reliably across devices.</p>
+        <span style="display:inline-block; margin-top:var(--space-xs); font-family:var(--ff-heading); font-weight:600; color:var(--clr-cyan); font-size:var(--fs-small);">Read Guide →</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:var(--space-xs);">
+      Questions or feedback? Contact us at
+      <a href="mailto:education.help@perforce.com">education.help@perforce.com</a>
+    </p>
+    <p>&copy; 2026 Perforce Software, Inc. All rights reserved. &middot; Getting Started with Perfecto AI</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT — Scroll Animations, Progress Bar, Active Nav
+     ============================================================ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── 1. SCROLL-TRIGGERED ANIMATIONS ── */
+  var animElements = document.querySelectorAll('.animate-on-scroll');
+  var observerOpts = { root: null, rootMargin: '0px 0px -60px 0px', threshold: 0.15 };
+
+  var scrollObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        scrollObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOpts);
+
+  animElements.forEach(function (el) {
+    scrollObserver.observe(el);
+  });
+
+  /* ── 2. TOPBAR SCROLL SHADOW ── */
+  var topbar = document.getElementById('topbar');
+
+  function handleTopbarShadow() {
+    if (window.scrollY > 20) {
+      topbar.classList.add('scrolled');
+    } else {
+      topbar.classList.remove('scrolled');
+    }
+  }
+
+  /* ── 3. PROGRESS BAR ── */
+  var progressBar = document.getElementById('progressBar');
+
+  function handleProgressBar() {
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = scrollPercent + '%';
+  }
+
+  /* ── 4. ACTIVE NAV LINK HIGHLIGHTING ── */
+  var navLinks = document.querySelectorAll('.topbar-nav a');
+  var sections = [];
+
+  navLinks.forEach(function (link) {
+    var href = link.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      var target = document.querySelector(href);
+      if (target) {
+        sections.push({ el: target, link: link });
+      }
+    }
+  });
+
+  function handleActiveNav() {
+    var scrollPos = window.scrollY + 120;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollPos) {
+        navLinks.forEach(function (l) { l.classList.remove('active'); });
+        sections[i].link.classList.add('active');
+        return;
+      }
+    }
+    navLinks.forEach(function (l) { l.classList.remove('active'); });
+    if (navLinks.length) navLinks[0].classList.add('active');
+  }
+
+  /* ── 5. SMOOTH SCROLL FOR NAV LINKS ── */
+  navLinks.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        var target = document.querySelector(href);
+        if (target) {
+          var offsetTop = target.offsetTop - 80;
+          window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+
+  /* ── 6. STAGGER ANIMATION FOR CARD GRIDS ── */
+  function staggerChildren(parentSelector, childSelector, delayMs) {
+    var parents = document.querySelectorAll(parentSelector);
+    parents.forEach(function (parent) {
+      var children = parent.querySelectorAll(childSelector);
+      var staggerObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            children.forEach(function (child, index) {
+              child.style.transitionDelay = (index * delayMs) + 'ms';
+              child.classList.add('visible');
+            });
+            staggerObs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      staggerObs.observe(parent);
+    });
+  }
+
+  staggerChildren('.info-cards', '.info-card', 100);
+  staggerChildren('.principle-cards', '.principle-card', 80);
+
+  /* Apply base hidden state to staggered children */
+  var staggeredSelectors = ['.info-card', '.principle-card'];
+  staggeredSelectors.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+    });
+  });
+
+  /* Visible state for staggered items */
+  var styleTag = document.createElement('style');
+  styleTag.textContent =
+    '.info-card.visible, .principle-card.visible ' +
+    '{ opacity: 1 !important; transform: translateY(0) !important; }';
+  document.head.appendChild(styleTag);
+
+  /* ── 7. COMBINED SCROLL HANDLER (debounced via rAF) ── */
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        handleTopbarShadow();
+        handleProgressBar();
+        handleActiveNav();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  /* Initial calls */
+  handleTopbarShadow();
+  handleProgressBar();
+  handleActiveNav();
+
+})();
+</script>
+
+</body>
+</html>

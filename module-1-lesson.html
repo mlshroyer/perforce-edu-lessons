@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module 1: API Portal Overview – General | Akana API Portal Training</title>
+
+<!-- Fonts -->
+<link rel="stylesheet" href="https://use.typekit.net/xxxxxxx.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ========== CSS VARIABLES ========== */
+:root {
+  --indigo: #3D1F8E;
+  --navy: #0D1B3E;
+  --cyan: #00B4D8;
+  --mint: #2EC4B6;
+  --light-grey: #F4F5F7;
+  --white: #FFFFFF;
+  --text-primary: #1A1A2E;
+  --text-secondary: #4A4A68;
+  --border-light: #E0E0E8;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-heading: 'canada-type-gibson', 'Gibson', sans-serif;
+  --font-body: 'Open Sans', sans-serif;
+  --max-width: 960px;
+  --transition: 0.3s ease;
+}
+
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: var(--cyan); text-decoration: none; transition: color var(--transition); }
+a:hover { color: var(--indigo); }
+
+/* ========== PROGRESS BAR ========== */
+#progressBarContainer {
+  position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+  background: var(--light-grey); z-index: 9999;
+}
+#progressBar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--cyan), var(--mint));
+  transition: width 0.15s linear;
+}
+
+/* ========== TOPBAR NAV ========== */
+#topbar {
+  position: sticky; top: 4px; z-index: 999;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  transition: box-shadow var(--transition);
+}
+#topbar.scrolled { box-shadow: var(--shadow-sm); }
+
+.topbar-inner {
+  max-width: var(--max-width);
+  margin: 0 auto; padding: 12px 24px;
+  display: flex; align-items: center; gap: 8px;
+  overflow-x: auto;
+}
+
+.topbar-nav a {
+  font-family: var(--font-heading);
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 14px; border-radius: 20px;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+.topbar-nav a:hover { color: var(--indigo); background: rgba(61,31,142,0.06); }
+.topbar-nav a.active { color: var(--white); background: var(--indigo); }
+
+/* ========== HERO ========== */
+.hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--indigo) 60%, #5B2FBF 100%);
+  color: var(--white);
+  padding: 80px 24px 72px;
+  text-align: center;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -2px; left: 0; width: 100%; height: 80px;
+  background: var(--white);
+  clip-path: ellipse(60% 40% at 50% 100%);
+}
+.hero-badge {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 6px 18px; border-radius: 20px;
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700; line-height: 1.2;
+  margin-bottom: 16px;
+}
+.hero .subtitle {
+  font-size: 1.1rem; opacity: 0.88;
+  max-width: 640px; margin: 0 auto 32px;
+}
+.hero-meta {
+  display: flex; justify-content: center; gap: 24px;
+  flex-wrap: wrap; font-size: 0.9rem; opacity: 0.8;
+}
+.hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ========== SECTION LAYOUT ========== */
+.section {
+  max-width: var(--max-width);
+  margin: 0 auto; padding: 64px 24px;
+}
+.section + .section { padding-top: 0; }
+
+.section-label {
+  font-family: var(--font-heading);
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 8px;
+}
+.section h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 700; color: var(--navy);
+  margin-bottom: 16px; line-height: 1.25;
+}
+.section h3 {
+  font-family: var(--font-heading);
+  font-size: 1.25rem; font-weight: 600;
+  color: var(--indigo); margin: 32px 0 12px;
+}
+.section p { margin-bottom: 16px; color: var(--text-secondary); }
+
+/* ========== LEARNING OBJECTIVES ========== */
+.objectives-card {
+  background: linear-gradient(135deg, rgba(0,180,216,0.06), rgba(46,196,182,0.06));
+  border: 1px solid rgba(0,180,216,0.18);
+  border-radius: var(--radius);
+  padding: 32px; margin-bottom: 48px;
+}
+.objectives-card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--navy); margin: 0 0 16px;
+}
+.objectives-card ul {
+  list-style: none; padding: 0;
+}
+.objectives-card li {
+  position: relative; padding-left: 28px;
+  margin-bottom: 10px; color: var(--text-secondary);
+}
+.objectives-card li::before {
+  content: '✓'; position: absolute; left: 0; top: 0;
+  color: var(--mint); font-weight: 700;
+}
+
+/* ========== CARDS GRID ========== */
+.cards-grid {
+  display: grid; gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin: 24px 0 32px;
+}
+.info-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 28px; transition: all var(--transition);
+}
+.info-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+.info-card .card-icon {
+  font-size: 1.6rem; margin-bottom: 12px;
+}
+.info-card h4 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem; font-weight: 600;
+  color: var(--navy); margin-bottom: 8px;
+}
+.info-card p { font-size: 0.92rem; margin: 0; color: var(--text-secondary); }
+
+/* ========== TABLES ========== */
+.styled-table {
+  width: 100%; border-collapse: collapse;
+  margin: 16px 0 24px; font-size: 0.92rem;
+  border-radius: var(--radius-sm); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.styled-table thead th {
+  font-family: var(--font-heading);
+  font-weight: 600; text-align: left;
+  padding: 14px 18px;
+  background: var(--navy); color: var(--white);
+}
+.styled-table tbody td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+.styled-table tbody tr:last-child td { border-bottom: none; }
+.styled-table tbody tr:nth-child(even) { background: var(--light-grey); }
+
+/* ========== CALLOUT BOXES ========== */
+.callout {
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
+  margin: 20px 0;
+  font-size: 0.95rem;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.callout .callout-icon { font-size: 1.3rem; flex-shrink: 0; }
+.callout-info {
+  background: rgba(0,180,216,0.07);
+  border-left: 4px solid var(--cyan);
+  color: var(--text-secondary);
+}
+.callout-tip {
+  background: rgba(46,196,182,0.07);
+  border-left: 4px solid var(--mint);
+  color: var(--text-secondary);
+}
+.callout-warning {
+  background: rgba(255,183,77,0.1);
+  border-left: 4px solid #FFB74D;
+  color: var(--text-secondary);
+}
+.callout-key {
+  background: rgba(61,31,142,0.06);
+  border-left: 4px solid var(--indigo);
+  color: var(--text-secondary);
+}
+
+/* ========== STEPS LIST ========== */
+.steps-list {
+  list-style: none; padding: 0;
+  counter-reset: step;
+  margin: 16px 0 24px;
+}
+.steps-list li {
+  counter-increment: step;
+  position: relative;
+  padding: 12px 0 12px 52px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+.steps-list li:last-child { border-bottom: none; }
+.steps-list li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 10px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--indigo); color: var(--white);
+  font-family: var(--font-heading);
+  font-size: 0.85rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ========== DIAGRAM ========== */
+.diagram-container {
+  background: var(--light-grey);
+  border-radius: var(--radius);
+  padding: 40px 24px; margin: 24px 0;
+  text-align: center;
+}
+.diagram-container pre {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem; line-height: 1.6;
+  display: inline-block; text-align: left;
+  color: var(--navy);
+}
+
+/* ========== KNOWLEDGE CHECK ========== */
+.quiz-card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 28px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.quiz-card .question {
+  font-family: var(--font-heading);
+  font-weight: 600; color: var(--navy);
+  margin-bottom: 16px; font-size: 1rem;
+}
+.quiz-card .options { list-style: none; padding: 0; }
+.quiz-card .options li {
+  padding: 10px 16px; margin-bottom: 8px;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer; transition: all var(--transition);
+  font-size: 0.93rem; color: var(--text-secondary);
+}
+.quiz-card .options li:hover {
+  border-color: var(--cyan);
+  background: rgba(0,180,216,0.04);
+}
+.quiz-card .options li.selected {
+  border-color: var(--indigo);
+  background: rgba(61,31,142,0.06);
+  color: var(--navy); font-weight: 600;
+}
+.quiz-card .options li.correct {
+  border-color: var(--mint);
+  background: rgba(46,196,182,0.1);
+  color: #0B7A6E; font-weight: 600;
+}
+.quiz-card .options li.incorrect {
+  border-color: #E57373;
+  background: rgba(229,115,115,0.08);
+  color: #C62828;
+}
+.quiz-card .feedback {
+  margin-top: 12px; font-size: 0.9rem;
+  font-weight: 600; display: none;
+}
+.quiz-card .feedback.show { display: block; }
+
+/* ========== SUMMARY TABLE ========== */
+.summary-section {
+  background: linear-gradient(135deg, var(--navy), var(--indigo));
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  color: var(--white);
+  margin: 32px 0;
+}
+.summary-section h2 {
+  color: var(--white); margin-bottom: 24px;
+}
+.summary-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.summary-item {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+.summary-item h4 {
+  font-family: var(--font-heading);
+  font-weight: 600; margin-bottom: 6px;
+  color: var(--cyan);
+}
+.summary-item p { font-size: 0.9rem; opacity: 0.85; margin: 0; color: var(--white); }
+
+/* ========== NEXT STEPS ========== */
+.next-steps {
+  background: var(--light-grey);
+  border-radius: var(--radius);
+  padding: 32px; margin: 24px 0;
+}
+.next-steps h3 {
+  font-family: var(--font-heading);
+  color: var(--navy); margin: 0 0 16px;
+}
+.next-steps ul {
+  list-style: none; padding: 0;
+}
+.next-steps li {
+  padding: 8px 0; padding-left: 24px;
+  position: relative; color: var(--text-secondary);
+}
+.next-steps li::before {
+  content: '→'; position: absolute; left: 0;
+  color: var(--cyan); font-weight: 700;
+}
+.next-steps li.current {
+  font-weight: 700; color: var(--indigo);
+}
+.next-steps li.current::before {
+  content: '●'; color: var(--indigo);
+}
+
+/* ========== FOOTER ========== */
+footer {
+  text-align: center;
+  padding: 40px 24px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.85rem; color: var(--text-secondary);
+}
+footer a { color: var(--cyan); }
+
+/* ========== ANIMATIONS ========== */
+.animate-on-scroll {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.animate-on-scroll.visible {
+  opacity: 1; transform: translateY(0);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 640px) {
+  .hero { padding: 56px 20px 56px; }
+  .hero h1 { font-size: 1.7rem; }
+  .section { padding: 40px 16px; }
+  .topbar-inner { padding: 10px 16px; }
+  .summary-section { padding: 28px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== PROGRESS BAR ========== -->
+<div id="progressBarContainer">
+  <div id="progressBar"></div>
+</div>
+
+<!-- ========== TOPBAR NAV ========== -->
+<nav id="topbar">
+  <div class="topbar-inner topbar-nav">
+    <a href="#hero" class="active">Overview</a>
+    <a href="#what-is">What Is It?</a>
+    <a href="#concepts">Core Concepts</a>
+    <a href="#navigation">Navigation</a>
+    <a href="#together">How It Fits</a>
+    <a href="#quiz">Knowledge Check</a>
+    <a href="#summary">Summary</a>
+  </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<header class="hero" id="hero">
+  <div class="hero-badge">Module 1 of 4</div>
+  <h1>API Portal Overview — General</h1>
+  <p class="subtitle">Explore the purpose, core concepts, and primary navigation of the Akana API Portal — the front door to your API ecosystem.</p>
+  <div class="hero-meta">
+    <span>⏱ 45–60 Minutes</span>
+    <span>📘 Beginner Level</span>
+    <span>📚 Akana API Portal Training Series</span>
+  </div>
+</header>
+
+<!-- ========== LEARNING OBJECTIVES ========== -->
+<section class="section" id="objectives">
+  <div class="objectives-card animate-on-scroll">
+    <h3>🎯 Learning Objectives</h3>
+    <p style="margin-bottom: 14px; font-size: 0.93rem;">By the end of this module, you will be able to:</p>
+    <ul>
+      <li>Describe the purpose and value of the Akana API Portal.</li>
+      <li>Define the core concepts: APIs, Apps, Contracts/Access, and Tenant/Organization.</li>
+      <li>Navigate the primary pages of the Akana API Portal: Dashboard, Admin, Users, APIs, and Apps.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========== SECTION 1: WHAT IS THE AKANA API PORTAL? ========== -->
+<section class="section" id="what-is">
+  <span class="section-label">Section 1</span>
+  <h2>What Is the Akana API Portal?</h2>
+
+  <h3>1.1 Overview</h3>
+  <p>The Akana API developer portal is a key component of the Akana API platform. It's more than a portal — it's a <strong>portal, marketplace, catalog, and directory</strong> all in one.</p>
+  <p>Think of it as the <strong>"front door"</strong> of your API ecosystem — a single, unified space where API producers, app developers, administrators, and business stakeholders all meet.</p>
+
+  <div class="callout callout-info">
+    <span class="callout-icon">💡</span>
+    <div>
+      <strong>Real-World Analogy:</strong> Imagine the Akana API Portal as an <em>app store for APIs</em>. Just like a mobile app store lets developers find, download, and use apps, the Akana Portal lets developers find, access, and consume APIs — complete with documentation, security policies, and usage analytics.
+    </div>
+  </div>
+
+  <h3>1.2 What Can You Do With It?</h3>
+  <p>With Akana, you can make it easy to:</p>
+  <div class="cards-grid animate-on-scroll">
+    <div class="info-card">
+      <div class="card-icon">📤</div>
+      <h4>Publish &amp; Deploy</h4>
+      <p>Publish and deploy consumable API products to make them available to your developer community.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔍</div>
+      <h4>Discover</h4>
+      <p>Find existing API products and view their documentation to understand how to use the APIs.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🤝</div>
+      <h4>Adopt &amp; Share</h4>
+      <p>Adopt and share APIs. Create teams and test different APIs in a secure environment with metrics and analytics.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🧪</div>
+      <h4>Explore &amp; Test</h4>
+      <p>The Community Manager developer portal provides a platform for app developers to easily explore, test, and connect with different APIs.</p>
+    </div>
+  </div>
+
+  <h3>1.3 Who Uses the Portal?</h3>
+  <p>With Akana, you'll have <strong>one marketplace for all stakeholders</strong> — your developers, API admins/product owners, and API consumers. This helps you ensure consistency by maintaining a single user interface. What each stakeholder can see and do will depend on their role and permissions.</p>
+
+  <table class="styled-table animate-on-scroll">
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Primary Activity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>App Developer</strong></td>
+        <td>Create apps, find APIs, request access</td>
+      </tr>
+      <tr>
+        <td><strong>API Admin</strong></td>
+        <td>Manage APIs, approve access requests, monitor usage</td>
+      </tr>
+      <tr>
+        <td><strong>Business Admin</strong></td>
+        <td>Manage organizations, policies, and users</td>
+      </tr>
+      <tr>
+        <td><strong>Site Admin</strong></td>
+        <td>Configure the portal, manage users and login settings</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ========== SECTION 2: CORE CONCEPTS ========== -->
+<section class="section" id="concepts">
+  <span class="section-label">Section 2</span>
+  <h2>Core Concepts</h2>
+
+  <!-- 2.1 APIs -->
+  <h3>2.1 APIs</h3>
+  <p>An <strong>API</strong> (Application Programming Interface) is a set of rules and protocols that allows software applications to communicate with each other.</p>
+  <p>The Akana API Platform API supports activities relating to setting up, managing, and supporting app and API owners and all other platform users. It has many features and capabilities to support such activities as logging in and out, setting up apps and APIs, creating contracts between apps and APIs, creating discussions and reviews, commenting on discussions and reviews, and creating and managing groups.</p>
+
+  <ul style="margin: 12px 0 20px 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+    <li>APIs are the <strong>products</strong> being published and consumed.</li>
+    <li>API Admins can design or import APIs, add implementations, define deployment zones, fine-tune, test, and monitor — and manage all activities relating to the API and its connected apps.</li>
+    <li>Akana supports <strong>Swagger, OAS, RAML, WSDL</strong> from a single platform.</li>
+  </ul>
+
+  <div class="callout callout-key">
+    <span class="callout-icon">🔑</span>
+    <div>
+      <strong>Key Term:</strong> An API in the portal represents both the technical service endpoint and the managed product — complete with documentation, security, and lifecycle governance.
+    </div>
+  </div>
+
+  <!-- 2.2 Apps -->
+  <h3>2.2 Apps</h3>
+  <p>An <strong>App</strong> in the Akana API Portal represents a consumer application that needs to connect to and use one or more APIs.</p>
+  <p>If you are an app developer, you can use the Community Manager developer portal to:</p>
+
+  <div class="cards-grid animate-on-scroll">
+    <div class="info-card">
+      <div class="card-icon">🛠</div>
+      <h4>Create &amp; Manage</h4>
+      <p>Create and manage apps within the portal environment.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">📖</div>
+      <h4>View &amp; Test</h4>
+      <p>View different APIs, review API documentation, and test APIs — either on their own or with your app.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔗</div>
+      <h4>Connect</h4>
+      <p>Connect to APIs that you want to use with your app and view analytics.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔒</div>
+      <h4>Secure</h4>
+      <p>Secure your app with credentials (keys/secrets) used for authentication.</p>
+    </div>
+  </div>
+
+  <p><strong>Key points about Apps:</strong></p>
+  <ul style="margin: 8px 0 20px 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+    <li>Every app must be <strong>registered</strong> in the portal before it can call an API.</li>
+    <li>Apps have their own credentials (keys/secrets) that are used for authentication.</li>
+    <li>Apps are linked to APIs through <strong>Contracts</strong> (see next section).</li>
+  </ul>
+
+  <div class="callout callout-info">
+    <span class="callout-icon">💡</span>
+    <div>
+      <strong>Real-World Example:</strong> A mobile banking app that calls a payment API would be registered as an App in the portal. The developer creates the app entry, configures credentials, and then requests access to the Payment API.
+    </div>
+  </div>
+
+  <!-- 2.3 Contracts / Access -->
+  <h3>2.3 Contracts / Access</h3>
+  <p>A <strong>Contract</strong> is the formal agreement that grants an App permission to call an API. This is the mechanism for controlled access.</p>
+  <p>After you have defined your app on the platform and chosen one or more APIs that include functionality you want to use, the next step is to connect your app to an API by <strong>requesting API access</strong>.</p>
+
+  <h4 style="font-family: var(--font-heading); color: var(--navy); margin: 24px 0 12px;">Contract Statuses</h4>
+  <table class="styled-table animate-on-scroll">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Approved</strong></td>
+        <td>The API Access Request has been approved but is still pending activation by the API Provider.</td>
+      </tr>
+      <tr>
+        <td><strong>Activated</strong></td>
+        <td>The API Access Request was approved and your app is connected to the API.</td>
+      </tr>
+      <tr>
+        <td><strong>Access Pending</strong></td>
+        <td>The API Access Request is pending approval by the API Provider.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4 style="font-family: var(--font-heading); color: var(--navy); margin: 24px 0 12px;">Sandbox vs. Live</h4>
+  <p>At the Endpoint page, choose the implementation you want access to: <strong>Sandbox</strong> or <strong>Live</strong>. Requests for access to the Sandbox environment are often, but not always, set up for auto-approval. Requests for access to a Live implementation can sometimes be auto-approved, but a request may require additional review.</p>
+
+  <h4 style="font-family: var(--font-heading); color: var(--navy); margin: 24px 0 12px;">How to Request API Access</h4>
+  <ol class="steps-list">
+    <li>Use the <strong>Search</strong> feature to find an API you're interested in using.</li>
+    <li>Click through from the search results to the <strong>API Details</strong> page.</li>
+    <li>From the Overview page for the API, click <strong>Access</strong> in the upper right-hand corner.</li>
+    <li>The <strong>API Access Wizard</strong> launches at the first step: Select App.</li>
+    <li>Specify the app/app version that you want the API connection for. Click <strong>Next</strong>.</li>
+    <li>At the Endpoint page, choose the implementation — <strong>Sandbox or Live</strong> — and click <strong>Next</strong>.</li>
+    <li>If policies are defined, you will see a list and can choose one or more policies. Click <strong>Next</strong>.</li>
+    <li>If the Licenses page displays, select a license option.</li>
+    <li>If there are any legal agreements associated with the API, review and accept each one.</li>
+    <li>Click <strong>Save</strong>.</li>
+  </ol>
+
+  <!-- 2.4 Tenant / Organization -->
+  <h3>2.4 Tenant / Organization</h3>
+  <p>A <strong>Tenant</strong> (also referred to as an Organization or Business) is the top-level administrative unit within the Akana API Portal. It provides an isolated environment for managing APIs, apps, users, and policies.</p>
+  <p>The Akana API Platform is composed of primary components, including <strong>Community Manager</strong> — a customized, secure API portal to make your APIs accessible to vendors and internal users, quickly onboard partners, provision APIs, and establish active social channels.</p>
+  <p>A business can own one or more APIs and apps, and must have at least one Administrator. The Business Administrator automatically has administrator rights over all the APIs and apps owned by the business as well as all the users who are part of the business.</p>
+
+  <table class="styled-table animate-on-scroll">
+    <thead>
+      <tr>
+        <th>Concept</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Tenant</strong></td>
+        <td>The top-level environment; often maps to a company or department</td>
+      </tr>
+      <tr>
+        <td><strong>Organization / Business</strong></td>
+        <td>A sub-unit within the tenant that owns APIs, Apps, and Users</td>
+      </tr>
+      <tr>
+        <td><strong>Business Admin</strong></td>
+        <td>Manages all APIs, apps, and users within the organization</td>
+      </tr>
+      <tr>
+        <td><strong>Root Level</strong></td>
+        <td>The top-most Business Admin scope — changes here affect all businesses</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip">
+    <span class="callout-icon">💡</span>
+    <div>
+      <strong>Analogy:</strong> Think of a Tenant like a corporate headquarters, and Organizations as its departments. Each department manages its own APIs and apps, but the corporate HQ (root level) can see and govern everything.
+    </div>
+  </div>
+</section>
+<!-- ========== SECTION 3: NAVIGATING THE AKANA API PORTAL ========== -->
+<section class="section" id="navigation">
+  <span class="section-label">Section 3</span>
+  <h2>Navigating the Akana API Portal</h2>
+  <p>The Akana API Portal offers a structured navigation layout. Understanding each primary section is key to working effectively in the platform.</p>
+
+  <!-- 3.1 Dashboard -->
+  <h3>3.1 Dashboard</h3>
+  <p>The <strong>Dashboard</strong> is your personalized activity hub — the first page you see after logging in.</p>
+
+  <div class="cards-grid animate-on-scroll">
+    <div class="info-card">
+      <div class="card-icon">📊</div>
+      <h4>Activity &amp; Alerts</h4>
+      <p>Displays recent activity, notifications, and alerts related to your APIs and Apps.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔔</div>
+      <h4>Subscriptions</h4>
+      <p>Subscribing to an app allows users to receive news or updates relating to the app on their personal Dashboard.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">⚡</div>
+      <h4>Quick Access</h4>
+      <p>Provides quick-access links to APIs, Apps, and Forum activity.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">👤</div>
+      <h4>Personalized</h4>
+      <p>Visible to all users — content is personalized based on your role and subscriptions.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <span class="callout-icon">🧭</span>
+    <div>
+      <strong>Navigation Tip:</strong> The Dashboard is your home base. Start here to get a quick pulse on the state of your APIs and apps before navigating deeper.
+    </div>
+  </div>
+
+  <!-- 3.2 Admin -->
+  <h3>3.2 Admin (Administration)</h3>
+  <p>The <strong>Admin</strong> section provides access to platform-level and organization-level configuration settings.</p>
+  <p>The following content is available at the root level, via <strong>More &gt; Admin</strong>, for users with the Business Administrator role:</p>
+
+  <div class="cards-grid animate-on-scroll" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">🌐</div>
+      <h4>API Gateways</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">👔</div>
+      <h4>Business Admins</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">🗺</div>
+      <h4>Deployment Zones</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">🔑</div>
+      <h4>Domains</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">💬</div>
+      <h4>Forum</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">📜</div>
+      <h4>Licenses</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">🏷</div>
+      <h4>Model Categories</h4>
+    </div>
+    <div class="info-card" style="text-align:center; padding: 20px;">
+      <div class="card-icon">🔐</div>
+      <h4>Scopes</h4>
+    </div>
+  </div>
+
+  <p>The <strong>Site Admin</strong> is responsible for keeping the site running smoothly, performing activities such as configuring site settings, managing users and other Site Admins, customizing the user interface, uploading and managing site content such as the landing page, online help, and developer agreement, and configuring login domains and custom workflows.</p>
+
+  <div class="callout callout-warning">
+    <span class="callout-icon">⚠️</span>
+    <div>
+      <strong>Access Note:</strong> The Admin section is only visible to users with <strong>Business Admin</strong> or <strong>Site Admin</strong> roles. Standard users and app developers will not see all Admin options.
+    </div>
+  </div>
+
+  <!-- 3.3 Users -->
+  <h3>3.3 Users</h3>
+  <p>The <strong>Users</strong> section enables administrators to manage portal user accounts and their assigned roles.</p>
+  <p>Key activities in the Users section:</p>
+
+  <ul style="margin: 8px 0 20px 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.9;">
+    <li>View all registered users in the tenant.</li>
+    <li>Assign or modify user roles (App Developer, API Admin, Business Admin, Site Admin).</li>
+    <li>Manage user access and permissions.</li>
+    <li>Review user activity and group memberships.</li>
+  </ul>
+
+  <!-- 3.4 APIs -->
+  <h3>3.4 APIs</h3>
+  <p>The <strong>APIs</strong> section is the central catalog for browsing, managing, and administering APIs.</p>
+  <p>From the API Admin perspective, activities include designing or importing an API, adding implementations and defining deployment zones, fine-tuning, testing, and monitoring, and managing all activities relating to the API and its connected apps.</p>
+
+  <table class="styled-table animate-on-scroll">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Who Can Do It</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Browse &amp; search APIs</td>
+        <td>All Users</td>
+      </tr>
+      <tr>
+        <td>View API documentation</td>
+        <td>All Users</td>
+      </tr>
+      <tr>
+        <td>Add / Import a new API</td>
+        <td>API Admin, Business Admin</td>
+      </tr>
+      <tr>
+        <td>Manage API implementations</td>
+        <td>API Admin</td>
+      </tr>
+      <tr>
+        <td>Review connected Apps</td>
+        <td>API Admin</td>
+      </tr>
+      <tr>
+        <td>Manage API contracts</td>
+        <td>API Admin, Business Admin</td>
+      </tr>
+      <tr>
+        <td>Monitor API analytics</td>
+        <td>API Admin, Business Admin</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 3.5 Apps -->
+  <h3>3.5 Apps</h3>
+  <p>The <strong>Apps</strong> section is where developers create and manage their registered applications.</p>
+  <p>To view a summary of the API contracts for your app, go to <strong>Apps &gt; My Apps &gt; choose app &gt; APIs</strong> page. All APIs that your app has contracts with are shown on the APIs page, along with the status of each contract.</p>
+  <p>Key activities in the Apps section:</p>
+
+  <ul style="margin: 8px 0 20px 20px; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.9;">
+    <li>Create and configure a new App.</li>
+    <li>View and manage API connections (contracts).</li>
+    <li>Configure App credentials (API keys / OAuth).</li>
+    <li>Monitor App-level analytics.</li>
+    <li>Promote an App to the next environment (e.g., from Sandbox to Production).</li>
+  </ul>
+
+  <div class="callout callout-tip">
+    <span class="callout-icon">💡</span>
+    <div>
+      <strong>Pro Tip:</strong> Always ensure your App has the correct credentials configured before requesting API Access. Before you can make a call to an API, you must add credentials for your app.
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 4: HOW IT ALL FITS TOGETHER ========== -->
+<section class="section" id="together">
+  <span class="section-label">Section 4</span>
+  <h2>How It All Fits Together</h2>
+  <p>The diagram below illustrates the relationships between the core concepts:</p>
+
+  <div class="diagram-container animate-on-scroll">
+    <pre>
+       ┌──────────────────────────┐
+       │   Tenant / Organization  │
+       └────────────┬─────────────┘
+                    │
+          ┌─────────┴─────────┐
+          │                   │
+     ┌────┴────┐        ┌────┴────┐
+     │  APIs   │        │  Apps   │
+     └────┬────┘        └────┬────┘
+          │                   │
+          └───┬───────────┬───┘
+              │           │
+        ┌─────┴─────┐    │
+        │ Contract / │    │
+        │   Access   │    │
+        └────────────┘    │
+                          │
+                   ┌──────┴──────┐
+                   │    Users    │
+                   └──────┬──────┘
+                          │
+                   ┌──────┴──────┐
+                   │  Dashboard  │
+                   └─────────────┘
+    </pre>
+  </div>
+
+  <div class="cards-grid animate-on-scroll" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+    <div class="info-card">
+      <div class="card-icon">🏢</div>
+      <h4>Tenant</h4>
+      <p>A Tenant houses all APIs and Apps within the platform.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">👥</div>
+      <h4>Users</h4>
+      <p>Users are assigned roles that determine what they can see and do.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔗</div>
+      <h4>Contracts</h4>
+      <p>Contracts are the bridge that connects Apps to APIs.</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">📊</div>
+      <h4>Dashboard</h4>
+      <p>The Dashboard provides a real-time, personalized view of all activity.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SECTION 5: KNOWLEDGE CHECK ========== -->
+<section class="section" id="quiz">
+  <span class="section-label">Section 5</span>
+  <h2>Knowledge Check</h2>
+  <p>Test your understanding of Module 1 with the following questions. Click an answer to check your response.</p>
+
+  <!-- Question 1 -->
+  <div class="quiz-card animate-on-scroll" data-correct="1">
+    <p class="question">1. What is the primary purpose of the Akana API Portal?</p>
+    <ul class="options">
+      <li data-index="0">A) To write backend code for APIs</li>
+      <li data-index="1">B) To provide a marketplace and management hub for APIs and Apps</li>
+      <li data-index="2">C) To replace the API Gateway</li>
+      <li data-index="3">D) To store source code</li>
+    </ul>
+    <p class="feedback"></p>
+  </div>
+
+  <!-- Question 2 -->
+  <div class="quiz-card animate-on-scroll" data-correct="1">
+    <p class="question">2. What is a "Contract" in the Akana Portal?</p>
+    <ul class="options">
+      <li data-index="0">A) A legal document between two companies</li>
+      <li data-index="1">B) A formal agreement granting an App permission to use an API</li>
+      <li data-index="2">C) A type of API endpoint</li>
+      <li data-index="3">D) A user account setting</li>
+    </ul>
+    <p class="feedback"></p>
+  </div>
+
+  <!-- Question 3 -->
+  <div class="quiz-card animate-on-scroll" data-correct="2">
+    <p class="question">3. Which page shows a personalized view of recent portal activity?</p>
+    <ul class="options">
+      <li data-index="0">A) Admin</li>
+      <li data-index="1">B) Apps</li>
+      <li data-index="2">C) Dashboard</li>
+      <li data-index="3">D) APIs</li>
+    </ul>
+    <p class="feedback"></p>
+  </div>
+
+  <!-- Question 4 -->
+  <div class="quiz-card animate-on-scroll" data-correct="2">
+    <p class="question">4. Who can access the Admin section of the portal?</p>
+    <ul class="options">
+      <li data-index="0">A) All registered users</li>
+      <li data-index="1">B) App Developers only</li>
+      <li data-index="2">C) Business Admins and Site Admins</li>
+      <li data-index="3">D) Users with API contracts</li>
+    </ul>
+    <p class="feedback"></p>
+  </div>
+</section>
+<!-- ========== MODULE SUMMARY ========== -->
+<section class="section" id="summary">
+  <div class="summary-section animate-on-scroll">
+    <span class="section-label" style="color: rgba(255,255,255,0.6);">Module Recap</span>
+    <h2>Module Summary</h2>
+    <p style="opacity: 0.85; margin-bottom: 28px; color: var(--white);">In this module, you were introduced to the foundational concepts of the Akana API Portal:</p>
+
+    <div class="summary-grid">
+      <div class="summary-item">
+        <h4>API Portal</h4>
+        <p>A unified platform for publishing, discovering, and consuming APIs.</p>
+      </div>
+      <div class="summary-item">
+        <h4>APIs</h4>
+        <p>The products published and managed in the portal.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Apps</h4>
+        <p>Consumer applications that request access to APIs.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Contracts / Access</h4>
+        <p>The formal permission grants linking Apps to APIs.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Tenant / Organization</h4>
+        <p>The administrative boundaries for governance and ownership.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Dashboard</h4>
+        <p>A personalized activity and notification hub.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Admin</h4>
+        <p>Platform configuration for Business Admins and Site Admins.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Users</h4>
+        <p>User account and role management section.</p>
+      </div>
+      <div class="summary-item">
+        <h4>APIs Page</h4>
+        <p>Central catalog for browsing and administering APIs.</p>
+      </div>
+      <div class="summary-item">
+        <h4>Apps Page</h4>
+        <p>Central location for managing registered applications.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT STEPS -->
+  <div class="next-steps animate-on-scroll">
+    <h3>📚 Next Steps in the Series</h3>
+    <ul>
+      <li class="current">Module 1 — API Portal Overview – General (You are here)</li>
+      <li>Module 2 — API Portal Overview – Advanced</li>
+      <li>Module 3 — API Onboarding</li>
+      <li>Module 4 — OAuth</li>
+    </ul>
+  </div>
+
+  <!-- ADDITIONAL RESOURCES -->
+  <div style="margin-top: 32px;" class="animate-on-scroll">
+    <h3 style="font-family: var(--font-heading); color: var(--navy); margin-bottom: 16px;">Additional Resources</h3>
+    <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+      <a href="https://docs.akana.com/" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration: none; cursor: pointer;">
+        <div class="card-icon">📖</div>
+        <h4>Akana Documentation Home</h4>
+        <p>Browse the complete Akana platform documentation.</p>
+      </a>
+      <a href="https://docs.akana.com/cm/learnmore/app_access_apis_connections.htm" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration: none; cursor: pointer;">
+        <div class="card-icon">🔗</div>
+        <h4>API Access Documentation</h4>
+        <p>Learn more about connecting Apps to APIs and managing contracts.</p>
+      </a>
+      <a href="https://docs.akana.com/cm/learnmore/apiadministration.htm" target="_blank" rel="noopener noreferrer" class="info-card" style="text-decoration: none; cursor: pointer;">
+        <div class="card-icon">🛠</div>
+        <h4>Community Manager Portal Help</h4>
+        <p>Detailed guidance on using the Community Manager developer portal.</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="callout callout-info animate-on-scroll" style="margin-top: 32px;">
+    <span class="callout-icon">📧</span>
+    <div>
+      <strong>Questions?</strong> Reach out to the Perforce Education team at <a href="mailto:education.help@perforce.com">education.help@perforce.com</a>.
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <p>&copy; 2026 Perforce Software, Inc. All rights reserved.</p>
+  <p style="margin-top: 6px;">Akana API Portal Training &middot; Module 1 of 4</p>
+</footer>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+(function () {
+  'use strict';
+
+  /* ==============================
+     1. SCROLL-TRIGGERED ANIMATIONS
+     ============================== */
+  var animElements = document.querySelectorAll('.animate-on-scroll');
+  var observerOpts = {
+    root: null,
+    rootMargin: '0px 0px -60px 0px',
+    threshold: 0.15
+  };
+  var scrollObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        scrollObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOpts);
+  animElements.forEach(function (el) {
+    scrollObserver.observe(el);
+  });
+
+  /* ==============================
+     2. TOPBAR SCROLL SHADOW
+     ============================== */
+  var topbar = document.getElementById('topbar');
+  function handleTopbarShadow() {
+    if (!topbar) return;
+    if (window.scrollY > 20) {
+      topbar.classList.add('scrolled');
+    } else {
+      topbar.classList.remove('scrolled');
+    }
+  }
+
+  /* ==============================
+     3. PROGRESS BAR
+     ============================== */
+  var progressBar = document.getElementById('progressBar');
+  function handleProgressBar() {
+    if (!progressBar) return;
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = scrollPercent + '%';
+  }
+
+  /* ==============================
+     4. ACTIVE NAV LINK HIGHLIGHTING
+     ============================== */
+  var navLinks = document.querySelectorAll('.topbar-nav a');
+  var sections = [];
+  navLinks.forEach(function (link) {
+    var href = link.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      var target = document.querySelector(href);
+      if (target) {
+        sections.push({ el: target, link: link });
+      }
+    }
+  });
+
+  function handleActiveNav() {
+    var scrollPos = window.scrollY + 140;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].el.offsetTop <= scrollPos) {
+        navLinks.forEach(function (l) {
+          l.classList.remove('active');
+        });
+        sections[i].link.classList.add('active');
+        return;
+      }
+    }
+    navLinks.forEach(function (l) {
+      l.classList.remove('active');
+    });
+    if (navLinks.length) navLinks[0].classList.add('active');
+  }
+
+  /* ==============================
+     5. SMOOTH SCROLL FOR NAV LINKS
+     ============================== */
+  navLinks.forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        var target = document.querySelector(href);
+        if (target) {
+          var offsetTop = target.offsetTop - 60;
+          window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+        }
+      }
+    });
+  });
+
+  /* ==============================
+     6. STAGGER ANIMATION FOR GRIDS
+     ============================== */
+  function staggerChildren(parentSelector, childSelector, delayMs) {
+    var parents = document.querySelectorAll(parentSelector);
+    parents.forEach(function (parent) {
+      var children = parent.querySelectorAll(childSelector);
+      var staggerObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            children.forEach(function (child, index) {
+              child.style.transitionDelay = (index * delayMs) + 'ms';
+              child.classList.add('visible');
+            });
+            staggerObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      staggerObserver.observe(parent);
+    });
+  }
+
+  staggerChildren('.cards-grid', '.info-card', 100);
+  staggerChildren('.summary-grid', '.summary-item', 80);
+
+  /* Apply base hidden state to staggered children */
+  var staggeredSelectors = ['.info-card', '.summary-item'];
+  staggeredSelectors.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(24px)';
+      el.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+    });
+  });
+
+  /* Visible state for staggered items */
+  var styleTag = document.createElement('style');
+  styleTag.textContent = '.info-card.visible, .summary-item.visible { opacity: 1 !important; transform: translateY(0) !important; }';
+  document.head.appendChild(styleTag);
+
+  /* ==============================
+     7. COMBINED SCROLL HANDLER
+     ============================== */
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        handleTopbarShadow();
+        handleProgressBar();
+        handleActiveNav();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // Initial calls
+  handleTopbarShadow();
+  handleProgressBar();
+  handleActiveNav();
+
+  /* ==============================
+     8. QUIZ INTERACTIVITY
+     ============================== */
+  var quizCards = document.querySelectorAll('.quiz-card');
+  quizCards.forEach(function (card) {
+    var correctIndex = parseInt(card.getAttribute('data-correct'), 10);
+    var options = card.querySelectorAll('.options li');
+    var feedback = card.querySelector('.feedback');
+    var answered = false;
+
+    options.forEach(function (option) {
+      option.addEventListener('click', function () {
+        if (answered) return;
+        answered = true;
+        var selectedIndex = parseInt(this.getAttribute('data-index'), 10);
+
+        // Highlight correct answer
+        options.forEach(function (opt) {
+          var idx = parseInt(opt.getAttribute('data-index'), 10);
+          if (idx === correctIndex) {
+            opt.classList.add('correct');
+          }
+        });
+
+        if (selectedIndex === correctIndex) {
+          this.classList.add('correct');
+          feedback.textContent = '✅ Correct!';
+          feedback.style.color = '#0B7A6E';
+        } else {
+          this.classList.add('incorrect');
+          feedback.textContent = '❌ Not quite. The correct answer is highlighted above.';
+          feedback.style.color = '#C62828';
+        }
+        feedback.classList.add('show');
+      });
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

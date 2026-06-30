@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lesson: Synthetic Data vs. Masking vs. Tokenization in Delphix</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/gh/nicholasgasior/gfonts-gibson/gibson.css" rel="stylesheet" />
+
+<style>
+/* ═══════════════════════════════════════
+   CSS CUSTOM PROPERTIES / BRAND TOKENS
+   ═══════════════════════════════════════ */
+:root {
+  --indigo: #3D1F8E;
+  --indigo-dark: #2E1769;
+  --navy: #0D1B2A;
+  --cyan: #00B4D8;
+  --mint: #43E8B1;
+  --light-grey: #F4F5F7;
+  --white: #FFFFFF;
+  --text-primary: #1E1E2F;
+  --text-secondary: #4A4A68;
+  --border-light: #E0E2EA;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --font-heading: 'Gibson', 'Open Sans', sans-serif;
+  --font-body: 'Open Sans', sans-serif;
+  --max-width: 960px;
+  --section-pad: 72px 24px;
+}
+
+/* ═══════════════════
+   RESET & BASE
+   ═══════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a { color: var(--indigo); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ═══════════════════
+   PROGRESS BAR
+   ═══════════════════ */
+#progressWrap {
+  position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+  background: transparent; z-index: 9999;
+}
+#progressBar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--cyan), var(--mint));
+  transition: width .15s ease-out;
+}
+
+/* ═══════════════════
+   TOPBAR (minimal)
+   ═══════════════════ */
+#topbar {
+  position: sticky; top: 0; z-index: 900;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-light);
+  transition: box-shadow .3s ease;
+  padding: 12px 32px;
+  display: flex; align-items: center; gap: 16px;
+}
+#topbar.scrolled { box-shadow: var(--shadow-sm); }
+#topbar .topbar-logo {
+  height: 28px; width: auto;
+}
+#topbar .topbar-title {
+  font-family: var(--font-heading);
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═══════════════════
+   LAYOUT
+   ═══════════════════ */
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+section {
+  padding: var(--section-pad);
+}
+section:nth-child(even) {
+  background: var(--light-grey);
+}
+
+/* ═══════════════════
+   HERO
+   ═══════════════════ */
+.hero {
+  background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-dark) 60%, var(--navy) 100%);
+  color: var(--white);
+  padding: 100px 24px 88px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -2px; left: 0; width: 100%; height: 80px;
+  background: var(--light-grey);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+.hero h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  letter-spacing: -0.5px;
+}
+.hero .subtitle {
+  font-size: 1.12rem;
+  max-width: 680px;
+  margin: 0 auto;
+  opacity: .9;
+  line-height: 1.65;
+}
+.hero .badge {
+  display: inline-block;
+  margin-bottom: 18px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 40px;
+  padding: 6px 20px;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════
+   HEADINGS
+   ═══════════════════ */
+h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.55rem, 3.5vw, 2rem);
+  font-weight: 700;
+  color: var(--indigo);
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.section-intro {
+  color: var(--text-secondary);
+  max-width: 740px;
+  margin-bottom: 36px;
+  font-size: 1.02rem;
+}
+
+/* ═══════════════════
+   CARDS
+   ═══════════════════ */
+.card-grid {
+  display: grid;
+  gap: 24px;
+}
+.card-grid.three { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 32px 28px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .3s ease, box-shadow .3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--cyan), var(--mint));
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.card:hover::before { opacity: 1; }
+.card .icon {
+  font-size: 2rem;
+  margin-bottom: 14px;
+  display: block;
+}
+.card h3 { margin-bottom: 10px; }
+.card p { color: var(--text-secondary); font-size: .95rem; }
+
+/* KEY-CHARS list inside cards */
+.key-chars { list-style: none; padding: 0; margin-top: 14px; }
+.key-chars li {
+  padding: 5px 0;
+  font-size: .93rem;
+  color: var(--text-secondary);
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.key-chars li::before {
+  content: '✓';
+  color: var(--mint);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════
+   COMPARISON TABLE
+   ═══════════════════ */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-top: 28px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .93rem;
+  background: var(--white);
+}
+thead th {
+  background: var(--indigo);
+  color: var(--white);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  padding: 16px 18px;
+  text-align: left;
+  white-space: nowrap;
+}
+thead th:first-child { border-radius: var(--radius-md) 0 0 0; }
+thead th:last-child  { border-radius: 0 var(--radius-md) 0 0; }
+tbody td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+  color: var(--text-secondary);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8f8fc; }
+tbody td:first-child {
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* ═══════════════════
+   EXAMPLE BLOCKS
+   ═══════════════════ */
+.example-block {
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 36px 32px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.example-block .ex-label {
+  display: inline-block;
+  background: var(--indigo);
+  color: var(--white);
+  font-family: var(--font-heading);
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 40px;
+  margin-bottom: 14px;
+}
+.example-block h3 { font-size: 1.15rem; margin-bottom: 6px; }
+.example-block .scenario { color: var(--text-secondary); margin-bottom: 16px; }
+.fit-tag, .nofit-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-heading);
+  font-size: .85rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.fit-tag { background: #E6FBF2; color: #0F7B52; }
+.nofit-tag { background: #FFF0F0; color: #B33A3A; }
+.example-block .reason { color: var(--text-secondary); font-size: .94rem; margin-bottom: 14px; }
+
+/* ═══════════════════
+   DECISION GUIDE
+   ═══════════════════ */
+.guide-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 28px; }
+.guide-card {
+  border-radius: var(--radius-md);
+  padding: 32px 28px;
+  border: 1px solid var(--border-light);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+.guide-card h3 { margin-bottom: 14px; }
+.guide-card ul { list-style: none; padding: 0; }
+.guide-card ul li {
+  position: relative;
+  padding: 6px 0 6px 22px;
+  font-size: .94rem;
+  color: var(--text-secondary);
+}
+.guide-card ul li::before {
+  content: '▸';
+  position: absolute; left: 0; top: 6px;
+  color: var(--cyan);
+  font-weight: 700;
+}
+.guide-card.synth { border-top: 4px solid var(--cyan); }
+.guide-card.mask  { border-top: 4px solid var(--indigo); }
+.guide-card.token { border-top: 4px solid var(--mint); }
+
+/* ═══════════════════
+   COMBINED APPROACH
+   ═══════════════════ */
+.combined-banner {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-dark));
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  margin-top: 28px;
+  box-shadow: var(--shadow-md);
+}
+.combined-banner h3 {
+  color: var(--white);
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+.combined-banner ul { list-style: none; padding: 0; }
+.combined-banner ul li {
+  padding: 6px 0 6px 24px;
+  position: relative;
+  opacity: .92;
+  font-size: .97rem;
+}
+.combined-banner ul li::before {
+  content: '✦';
+  position: absolute; left: 0; top: 6px;
+  color: var(--mint);
+}
+
+/* ═══════════════════
+   SUMMARY TABLE
+   ═══════════════════ */
+.summary-section { padding-bottom: 40px; }
+
+/* ═══════════════════
+   FOOTER
+   ═══════════════════ */
+footer {
+  text-align: center;
+  padding: 40px 24px;
+  font-size: .85rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-light);
+}
+footer a { color: var(--indigo); font-weight: 600; }
+footer .brand-line {
+  margin-top: 10px;
+  font-size: .8rem;
+  opacity: .7;
+}
+
+/* ═══════════════════
+   ANIMATIONS
+   ═══════════════════ */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .6s ease-out, transform .6s ease-out;
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════
+   RESPONSIVE
+   ═══════════════════ */
+@media (max-width: 680px) {
+  .hero { padding: 72px 20px 64px; }
+  section { padding: 48px 16px; }
+  .example-block { padding: 24px 20px; }
+  .combined-banner { padding: 32px 24px; }
+  table { font-size: .82rem; }
+  thead th, tbody td { padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ PROGRESS BAR ══════════ -->
+<div id="progressWrap"><div id="progressBar"></div></div>
+
+<!-- ══════════ TOPBAR ══════════ -->
+<div id="topbar">
+  <span class="topbar-title">Education — Synthetic Data vs. Masking vs. Tokenization</span>
+</div>
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <div class="container">
+    <span class="badge">Delphix Education</span>
+    <h1>Synthetic Data vs. Masking<br />vs. Tokenization</h1>
+    <p class="subtitle">Modern enterprises face a critical tension: they need realistic data to develop, test, and innovate, but they must also protect sensitive information and comply with regulations like GDPR, HIPAA, and PCI&nbsp;DSS. This lesson defines each technique, explains how they differ, walks through focused examples, and provides guidance on when to use each.</p>
+  </div>
+</section>
+
+<!-- ══════════ 1. WHAT IS SYNTHETIC DATA? ══════════ -->
+<section id="synthetic-data">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>1. What Is Synthetic Data?</h2>
+      <p class="section-intro">Delphix Synthetic Data enables teams to generate realistic, production-like test data that does not exist in production. Unlike masking, which transforms existing production data, Synthetic Data creates entirely new datasets from scratch.</p>
+    </div>
+
+    <div class="card animate-on-scroll" style="max-width:740px;">
+      <span class="icon">🧬</span>
+      <h3>How It Works</h3>
+      <p>Delphix Synthetic Data analyses the reference schema, examining table structures, column data types, constraints, relationships and semantics. Configure generation rules to define how synthetic values are produced for each table and column. Synthetic Data architecture is organized around applications, datasets, connectors, and jobs that work together to generate realistic synthetic data while preserving relationships between database objects.</p>
+      <ul class="key-chars">
+        <li>No production data is involved</li>
+        <li>Data is entirely artificial — generated from metadata and rules, not derived from any real records</li>
+        <li>Supports testing scenarios that production data alone cannot cover</li>
+        <li>Generates realistic, statistically representative datasets for non-production environments</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 2. WHAT IS DATA MASKING? ══════════ -->
+<section id="data-masking">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>2. What Is Data Masking?</h2>
+      <p class="section-intro">The masking capability of the Delphix DevOps Data Platform represents an automated approach to protecting non-production environments, replacing confidential information such as social security numbers, patient records, and credit card information with fictitious, yet realistic data.</p>
+    </div>
+
+    <div class="card animate-on-scroll" style="max-width:740px;">
+      <span class="icon">🛡️</span>
+      <h3>Key Characteristics</h3>
+      <p>Unlike encryption measures that can be bypassed through schemes to obtain user credentials, masking irreversibly protects data in downstream environments.</p>
+      <ul class="key-chars">
+        <li><strong>Source:</strong> Real production data</li>
+        <li><strong>Direction:</strong> One-way / irreversible</li>
+        <li><strong>Output:</strong> Realistic, fictitious replacements</li>
+        <li>Consistent masking of data while maintaining referential integrity across heterogeneous data sources</li>
+        <li>No programming expertise required</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 3. WHAT IS TOKENIZATION? ══════════ -->
+<section id="tokenization">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>3. What Is Tokenization?</h2>
+      <p class="section-intro">Tokenization is a form of encryption where the actual data — such as names and addresses — are converted into tokens that do not convey any meaning (with regard to appearance and formatting). The Tokenization framework allows you to mask data and reverse its masking.</p>
+    </div>
+
+    <div class="card animate-on-scroll" style="max-width:740px;">
+      <span class="icon">🔐</span>
+      <h3>Key Characteristics</h3>
+      <p>The algorithm tokenizes values using AES-128 encryption in CBC-CTS mode, with an optional initialization vector (IV), and Base64 encoding. The results are alpha-numeric strings that are longer than the original values.</p>
+      <ul class="key-chars">
+        <li><strong>Source:</strong> Real production data</li>
+        <li><strong>Direction:</strong> Reversible (data can be re-identified)</li>
+        <li><strong>Output:</strong> Encrypted tokens (alpha-numeric strings)</li>
+        <li>Mask data before sending to external vendors for analysis</li>
+        <li>Reverse the masking to take action on flagged accounts</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 4. SIDE-BY-SIDE COMPARISON ══════════ -->
+<section id="comparison">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>4. Side-by-Side Comparison</h2>
+      <p class="section-intro">A quick-reference view of the three techniques across key evaluation dimensions.</p>
+    </div>
+    <div class="table-wrap animate-on-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>Synthetic Data</th>
+            <th>Masking</th>
+            <th>Tokenization</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Data Origin</td>
+            <td>Generated from schema metadata and rules — no production data</td>
+            <td>Derived from real production data</td>
+            <td>Derived from real production data</td>
+          </tr>
+          <tr>
+            <td>Reversibility</td>
+            <td>N/A (no original to reverse to)</td>
+            <td>Irreversible — original values cannot be recovered</td>
+            <td>Reversible — original values can be recovered via re-identification</td>
+          </tr>
+          <tr>
+            <td>Output Appearance</td>
+            <td>Realistic, structurally valid records</td>
+            <td>Realistic, fictitious replacement values</td>
+            <td>Encoded tokens (e.g., <code>FQL71CmqK/pkd8B2...</code>)</td>
+          </tr>
+          <tr>
+            <td>Referential Integrity</td>
+            <td>Preserved across generated tables</td>
+            <td>Preserved across masked tables</td>
+            <td>Preserved (consistent mapping)</td>
+          </tr>
+          <tr>
+            <td>Privacy Risk</td>
+            <td>None — data is entirely artificial</td>
+            <td>None if properly applied — values are irreversibly replaced</td>
+            <td>Low — but reversible, so key management is critical</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 5. REALISTIC EXAMPLES ══════════ -->
+<section id="examples">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>5. Realistic Examples Demonstrating the Differences</h2>
+      <p class="section-intro">Four practical scenarios illustrating when — and why — each technique is the right fit.</p>
+    </div>
+
+    <!-- Example A -->
+    <div class="example-block animate-on-scroll">
+      <span class="ex-label">Example A</span>
+      <h3>Testing a New Payments Feature — Synthetic Data</h3>
+      <p class="scenario"><strong>Scenario:</strong> A fintech company is building a new "Buy Now, Pay Later" installment feature. The production database has no installment plan records because the feature doesn't exist yet.</p>
+      <span class="fit-tag">✔ Why Synthetic Data Fits</span>
+      <p class="reason">Synthetic Data helps development and testing teams create structurally valid, referentially consistent datasets for scenarios that production data cannot support, such as testing new schemas, edge cases, or early-stage applications. The team generates thousands of synthetic customer profiles, orders, and installment schedules — including edge cases like $0 installments, overdue payments, and maximum-term plans — without waiting for production data that does not yet exist.</p>
+      <span class="nofit-tag">✘ Why Masking Does Not Fit</span>
+      <p class="reason">There is no production data to mask. Masking transforms existing records; it cannot create records for a schema that has never held data.</p>
+    </div>
+
+    <!-- Example B -->
+    <div class="example-block animate-on-scroll">
+      <span class="ex-label">Example B</span>
+      <h3>Refreshing a QA Environment with Production-Like Data — Masking</h3>
+      <p class="scenario"><strong>Scenario:</strong> A healthcare organization needs to populate its QA environment with realistic patient data for regression testing of its claims processing system. The production database contains millions of real patient records with names, diagnoses, SSNs, and insurance IDs.</p>
+      <span class="fit-tag">✔ Why Masking Fits</span>
+      <p class="reason">Delphix Masking is a multi-user, browser-based web application that provides complete, secure, and scalable software for your sensitive data discovery, masking, and tokenization needs. The team masks patient names, SSNs, and diagnoses with fictitious but realistic replacements. Referential integrity is preserved, so a masked patient's ID still links correctly across claims, encounters, and billing tables. The result is a fully functional, HIPAA-compliant test environment that mirrors the complexity and volume of production.</p>
+      <span class="nofit-tag">✘ Why Synthetic Data Does Not Fit</span>
+      <p class="reason">The organization specifically needs to test against the full complexity and data distribution patterns of its real production workload. Masked production data preserves these real-world distributions, relationships, and edge conditions as they actually exist, which is critical for regression testing.</p>
+    </div>
+
+    <!-- Example C -->
+    <div class="example-block animate-on-scroll">
+      <span class="ex-label">Example C</span>
+      <h3>Sharing Data with an External Analytics Vendor — Tokenization</h3>
+      <p class="scenario"><strong>Scenario:</strong> A retail bank sends transaction records to an external fraud-analytics vendor. After the vendor flags suspicious accounts, the bank must map those flagged tokens back to the original account holders to take action.</p>
+      <span class="fit-tag">✔ Why Tokenization Fits</span>
+      <p class="reason">You can use a Tokenization algorithm to mask data before you send it to an external vendor for analysis. The vendor can then identify accounts that need attention without having any access to the original, sensitive data. Once you have the vendor's feedback, you can reverse the masking and take action on the appropriate accounts. The bank tokenizes account holder names and account numbers before export; the vendor performs its analysis on tokens; when results are returned, the bank re-identifies the tokens back to real account holders.</p>
+      <span class="nofit-tag">✘ Why Masking Does Not Fit</span>
+      <p class="reason">Masking is irreversible. If the bank masked account data before sending it to the vendor, there would be no way to map the vendor's flagged results back to the actual accounts.</p>
+      <span class="nofit-tag">✘ Why Synthetic Data Does Not Fit</span>
+      <p class="reason">The vendor needs to analyze patterns in real transaction data (volumes, frequencies, geographies). Entirely synthetic data would not reflect real fraud patterns in the bank's portfolio.</p>
+    </div>
+
+    <!-- Example D -->
+    <div class="example-block animate-on-scroll">
+      <span class="ex-label">Example D</span>
+      <h3>Edge-Case and Chaos Testing for an API — Synthetic Data</h3>
+      <p class="scenario"><strong>Scenario:</strong> A development team is building a new REST API for an insurance quoting engine and needs to test boundary conditions — policies with 100 riders, zero-premium quotes, quotes for customers at the maximum insurable age, and malformed input payloads.</p>
+      <span class="fit-tag">✔ Why Synthetic Data Fits</span>
+      <p class="reason">Delphix Synthetic Data removes data bottlenecks by generating realistic, scenario-specific data on demand — eliminating data bottlenecks and enabling developers, testers, and AI agents to move at agentic speed. The team generates targeted synthetic records that include these extreme and negative scenarios, which simply do not exist in production.</p>
+      <span class="nofit-tag">✘ Why Masking Does Not Fit</span>
+      <p class="reason">Production data contains only "normal" policies. Masking those records would produce safe copies of normal data — it cannot introduce edge cases or boundary conditions that aren't already present.</p>
+    </div>
+
+  </div>
+</section>
+<!-- ══════════ 6. DECISION GUIDE ══════════ -->
+<section id="decision-guide">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>6. When to Use Each Technique — Decision Guide</h2>
+      <p class="section-intro">Match the right technique to the right circumstance using the guidance below.</p>
+    </div>
+
+    <div class="guide-cards">
+
+      <!-- Synthetic Data -->
+      <div class="guide-card synth animate-on-scroll">
+        <h3>🧬 Use Synthetic Data When…</h3>
+        <ul>
+          <li>Testing new schemas, edge cases, or early-stage applications where no production data exists</li>
+          <li>You need specific, tailored data characteristics — boundary values, negative scenarios, stress-test volumes</li>
+          <li>Compliance regulations prohibit any use of production data, even in transformed form</li>
+          <li>You want to accelerate development and testing cycles while supporting data privacy and compliance requirements</li>
+        </ul>
+      </div>
+
+      <!-- Masking -->
+      <div class="guide-card mask animate-on-scroll">
+        <h3>🛡️ Use Masking When…</h3>
+        <ul>
+          <li>You have mature production data and need to replicate its real-world complexity in non-production environments</li>
+          <li>You need a permanent, one-way transformation — masking irreversibly protects data in downstream environments</li>
+          <li>Regulations (GDPR, HIPAA, PCI DSS) require that sensitive data never appear in dev/test, but realistic structure and volume must be preserved</li>
+          <li>You need seamless integration of masking with data delivery capabilities before data is sent to an offsite data center or the public cloud</li>
+        </ul>
+      </div>
+
+      <!-- Tokenization -->
+      <div class="guide-card token animate-on-scroll">
+        <h3>🔐 Use Tokenization When…</h3>
+        <ul>
+          <li>Data must be shared externally (vendors, partners) but you need to reverse the transformation afterward to act on results</li>
+          <li>You need to obfuscate data sent for processing, then reverse it when the processed data set is returned</li>
+          <li>Business workflows require round-trip data protection — tokenize → process → re-identify</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 7. THE COMBINED APPROACH ══════════ -->
+<section id="combined-approach">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>7. The Combined Approach</h2>
+      <p class="section-intro">These techniques are not mutually exclusive. In practice, leading organizations use them together.</p>
+    </div>
+
+    <div class="combined-banner animate-on-scroll">
+      <h3>Converging Capabilities in Delphix</h3>
+      <ul>
+        <li><strong>Mask</strong> production data for stable QA and regression environments</li>
+        <li><strong>Generate synthetic data</strong> for early-stage feature testing, edge cases, and schema validation</li>
+        <li><strong>Tokenize</strong> data for controlled sharing with external partners</li>
+        <li><strong>Synthetic Secure Lookup Lists</strong> generated with AI Services help organizations mask sensitive data with realistic, synthetic alternatives — especially valuable for test environments and compliance scenarios</li>
+      </ul>
+      <p style="margin-top:18px;opacity:.88;font-size:.95rem;">This demonstrates how synthetic and masking capabilities converge — Delphix can generate synthetic lookup values (names, addresses, medical conditions) and feed them directly into masking algorithms.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SUMMARY TABLE ══════════ -->
+<section id="summary" class="summary-section">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <h2>Summary</h2>
+      <p class="section-intro">A concise decision matrix to guide your technique selection.</p>
+    </div>
+    <div class="table-wrap animate-on-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Question</th>
+            <th>Synthetic Data</th>
+            <th>Masking</th>
+            <th>Tokenization</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Does it use production data?</td>
+            <td>No</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Is the transformation reversible?</td>
+            <td>N/A</td>
+            <td>No</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Does output look realistic?</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>No (encoded tokens)</td>
+          </tr>
+          <tr>
+            <td>Best for edge cases &amp; new schemas?</td>
+            <td>Yes</td>
+            <td>No</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <td>Best for compliance in dev/test?</td>
+            <td>Yes</td>
+            <td>Yes</td>
+            <td>Situational</td>
+          </tr>
+          <tr>
+            <td>Best for external data sharing?</td>
+            <td>No</td>
+            <td>No</td>
+            <td>Yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="animate-on-scroll" style="margin-top:32px; max-width:740px;">
+      <p style="color:var(--text-secondary);font-size:.97rem;">The right choice depends on your <strong>data source</strong> (do you have production data?), your <strong>reversibility requirement</strong> (must you recover originals?), and your <strong>testing goal</strong> (realism vs. scenario coverage). Delphix provides all three within a unified platform so teams can apply the right technique to the right circumstance.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <p>Questions about this lesson? Contact us at <a href="mailto:education.help@perforce.com">education.help@perforce.com</a></p>
+  <p class="brand-line">© 2026 Perforce Software, Inc. All rights reserved.</p>
+</footer>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT — Scroll Animations & Progress
+     ══════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── 1. SCROLL-TRIGGERED ANIMATIONS ── */
+  var animElements = document.querySelectorAll('.animate-on-scroll');
+  var observerOpts = { root: null, rootMargin: '0px 0px -60px 0px', threshold: 0.15 };
+
+  var scrollObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        scrollObserver.unobserve(entry.target);
+      }
+    });
+  }, observerOpts);
+
+  animElements.forEach(function (el) {
+    scrollObserver.observe(el);
+  });
+
+  /* ── 2. TOPBAR SCROLL SHADOW ── */
+  var topbar = document.getElementById('topbar');
+  function handleTopbarShadow() {
+    if (!topbar) return;
+    if (window.scrollY > 20) {
+      topbar.classList.add('scrolled');
+    } else {
+      topbar.classList.remove('scrolled');
+    }
+  }
+
+  /* ── 3. PROGRESS BAR ── */
+  var progressBar = document.getElementById('progressBar');
+  function handleProgressBar() {
+    if (!progressBar) return;
+    var scrollTop = window.scrollY;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    progressBar.style.width = scrollPercent + '%';
+  }
+
+  /* ── 4. STAGGER ANIMATION FOR CARD GRIDS ── */
+  function staggerChildren(parentSelector, childSelector, delayMs) {
+    var parents = document.querySelectorAll(parentSelector);
+    parents.forEach(function (parent) {
+      var children = parent.querySelectorAll(childSelector);
+      var staggerObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            children.forEach(function (child, index) {
+              child.style.transitionDelay = (index * delayMs) + 'ms';
+              child.classList.add('visible');
+            });
+            staggerObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      staggerObserver.observe(parent);
+    });
+  }
+
+  staggerChildren('.guide-cards', '.guide-card', 120);
+  staggerChildren('.card-grid', '.card', 120);
+
+  /* Apply base hidden state to staggered children */
+  var staggeredSelectors = ['.guide-card'];
+  staggeredSelectors.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+    });
+  });
+
+  /* Visible state for staggered items */
+  var styleTag = document.createElement('style');
+  styleTag.textContent = '.guide-card.visible { opacity: 1 !important; transform: translateY(0) !important; }';
+  document.head.appendChild(styleTag);
+
+  /* ── 5. COMBINED SCROLL HANDLER (debounced via rAF) ── */
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        handleTopbarShadow();
+        handleProgressBar();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  /* Initial calls */
+  handleTopbarShadow();
+  handleProgressBar();
+})();
+</script>
+
+</body>
+</html>

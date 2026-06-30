@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Lab — Perfecto AI Learning Game</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/nicholasgasior/gfonts-gibson/gibson.css" rel="stylesheet" />
+
+  <style>
+    /* ========== RESET & VARIABLES ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pf-indigo: #4A2A8A;
+      --pf-navy: #1B2A4A;
+      --pf-cyan: #00B4D8;
+      --pf-mint: #00C9A7;
+      --pf-light-grey: #F4F5F7;
+      --pf-white: #FFFFFF;
+      --pf-dark-text: #1E1E2F;
+      --pf-body-text: #3A3A4A;
+      --pf-border: #E0E0E6;
+      --pf-accent-gradient: linear-gradient(135deg, var(--pf-indigo), var(--pf-cyan));
+      --pf-soft-gradient: linear-gradient(135deg, #f0ecf8, #e6f7fb);
+      --pf-success: #1a8a5e;
+      --pf-success-bg: #e8f8f0;
+      --pf-error: #c0392b;
+      --pf-error-bg: #fdf0ee;
+      --pf-warn-yellow: #f1c40f;
+      --font-heading: 'Gibson', 'Open Sans', sans-serif;
+      --font-body: 'Open Sans', sans-serif;
+      --max-width: 760px;
+      --radius: 14px;
+      --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--pf-body-text);
+      background: var(--pf-light-grey);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========== PROGRESS TOPBAR ========== */
+    .game-topbar {
+      position: sticky; top: 0; z-index: 100;
+      width: 100%;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--pf-border);
+      padding: 0;
+      display: none; /* shown during game */
+    }
+    .game-topbar.visible { display: block; }
+    .topbar-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .topbar-brand {
+      font-family: var(--font-heading);
+      font-weight: 700; font-size: 0.95rem;
+      color: var(--pf-indigo);
+      white-space: nowrap;
+    }
+    .topbar-progress-wrap {
+      flex: 1;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .topbar-progress-bar {
+      flex: 1; height: 6px;
+      background: var(--pf-border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .topbar-progress-fill {
+      height: 100%; width: 0%;
+      background: var(--pf-accent-gradient);
+      border-radius: 3px;
+      transition: width 0.45s ease;
+    }
+    .topbar-progress-label {
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--pf-navy);
+      white-space: nowrap;
+    }
+    .topbar-score {
+      font-family: var(--font-heading);
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--pf-success);
+      white-space: nowrap;
+    }
+
+    /* ========== SCREEN CONTAINERS ========== */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: var(--max-width);
+      padding: 24px;
+      animation: fadeSlideIn 0.45s ease-out;
+    }
+    .screen.active { display: block; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== WELCOME SCREEN ========== */
+    .welcome-card {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 56px 40px;
+      text-align: center;
+      margin-top: 48px;
+    }
+    .welcome-badge {
+      display: inline-block;
+      background: var(--pf-accent-gradient);
+      color: var(--pf-white);
+      font-family: var(--font-body);
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      padding: 5px 16px;
+      border-radius: 50px;
+      margin-bottom: 24px;
+    }
+    .welcome-card h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: var(--pf-navy);
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+    .welcome-card p {
+      color: var(--pf-body-text);
+      max-width: 540px;
+      margin: 0 auto 28px;
+      font-size: 1.02rem;
+    }
+    .welcome-phases {
+      display: grid; gap: 10px;
+      max-width: 420px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+    .welcome-phase {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--pf-light-grey);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--pf-navy);
+    }
+    .welcome-phase-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--pf-accent-gradient);
+      color: var(--pf-white);
+      font-family: var(--font-heading);
+      font-size: 0.78rem; font-weight: 700;
+      border-radius: 50%;
+    }
+
+    /* ========== BUTTONS ========== */
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+      background: var(--pf-accent-gradient);
+      color: var(--pf-white);
+      font-family: var(--font-heading);
+      font-size: 1rem; font-weight: 700;
+      padding: 14px 36px;
+      border: none; border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(74,42,138,0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(74,42,138,0.35);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--pf-indigo);
+      font-family: var(--font-heading);
+      font-size: 0.92rem; font-weight: 700;
+      padding: 12px 28px;
+      border: 2px solid var(--pf-indigo);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover {
+      background: var(--pf-indigo);
+      color: var(--pf-white);
+    }
+
+    /* ========== PHASE INTRO CARD ========== */
+    .phase-intro {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 44px 36px;
+      text-align: center;
+      margin-top: 32px;
+    }
+    .phase-intro .phase-label {
+      font-family: var(--font-body);
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--pf-cyan);
+      margin-bottom: 10px;
+    }
+    .phase-intro h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--pf-navy);
+      margin-bottom: 12px;
+    }
+    .phase-intro p {
+      color: var(--pf-body-text);
+      max-width: 520px;
+      margin: 0 auto 28px;
+      font-size: 0.96rem;
+    }
+
+    /* ========== QUESTION CARD ========== */
+    .question-card {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 36px 32px;
+      margin-top: 24px;
+    }
+    .question-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .question-phase-tag {
+      font-family: var(--font-body);
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--pf-cyan);
+    }
+    .question-counter {
+      font-family: var(--font-heading);
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--pf-navy);
+    }
+    .question-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--pf-navy);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .question-context {
+      font-size: 0.92rem;
+      color: var(--pf-body-text);
+      margin-bottom: 24px;
+      padding: 14px 18px;
+      background: var(--pf-light-grey);
+      border-radius: 10px;
+      border-left: 4px solid var(--pf-cyan);
+      font-style: italic;
+    }
+
+    /* ========== ANSWER OPTIONS ========== */
+    .options-list {
+      display: grid; gap: 10px;
+      list-style: none;
+    }
+    .option-btn {
+      display: flex; align-items: flex-start; gap: 14px;
+      width: 100%;
+      background: var(--pf-light-grey);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--pf-dark-text);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      line-height: 1.5;
+    }
+    .option-btn:hover:not(.disabled) {
+      border-color: var(--pf-cyan);
+      background: #eaf8fc;
+      transform: translateY(-1px);
+    }
+    .option-btn .opt-letter {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--pf-white);
+      border: 2px solid var(--pf-border);
+      border-radius: 50%;
+      font-family: var(--font-heading);
+      font-size: 0.78rem; font-weight: 700;
+      color: var(--pf-navy);
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .option-btn.selected {
+      border-color: var(--pf-indigo);
+      background: #f0ecf8;
+    }
+    .option-btn.selected .opt-letter {
+      background: var(--pf-indigo);
+      border-color: var(--pf-indigo);
+      color: var(--pf-white);
+    }
+    .option-btn.correct {
+      border-color: var(--pf-success);
+      background: var(--pf-success-bg);
+    }
+    .option-btn.correct .opt-letter {
+      background: var(--pf-success);
+      border-color: var(--pf-success);
+      color: var(--pf-white);
+    }
+    .option-btn.incorrect {
+      border-color: var(--pf-error);
+      background: var(--pf-error-bg);
+    }
+    .option-btn.incorrect .opt-letter {
+      background: var(--pf-error);
+      border-color: var(--pf-error);
+      color: var(--pf-white);
+    }
+    .option-btn.disabled {
+      cursor: default;
+      pointer-events: none;
+    }
+    .option-btn.dimmed {
+      opacity: 0.45;
+    }
+
+    /* ========== FEEDBACK PANEL ========== */
+    .feedback-panel {
+      display: none;
+      margin-top: 20px;
+      padding: 20px 24px;
+      border-radius: 12px;
+      font-size: 0.93rem;
+      line-height: 1.6;
+      animation: fadeSlideIn 0.35s ease-out;
+    }
+    .feedback-panel.visible { display: block; }
+    .feedback-panel.correct-feedback {
+      background: var(--pf-success-bg);
+      border-left: 4px solid var(--pf-success);
+    }
+    .feedback-panel.incorrect-feedback {
+      background: var(--pf-error-bg);
+      border-left: 4px solid var(--pf-error);
+    }
+    .feedback-label {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .feedback-panel.correct-feedback .feedback-label { color: var(--pf-success); }
+    .feedback-panel.incorrect-feedback .feedback-label { color: var(--pf-error); }
+    .feedback-panel .next-btn-wrap {
+      margin-top: 16px;
+      text-align: right;
+    }
+
+    /* ========== RESULTS SCREEN ========== */
+    .results-card {
+      background: var(--pf-white);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 48px 36px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .results-card h2 {
+      font-family: var(--font-heading);
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--pf-navy);
+      margin-bottom: 8px;
+    }
+    .results-subtitle {
+      font-size: 1rem;
+      color: var(--pf-body-text);
+      margin-bottom: 36px;
+    }
+    .results-score-ring {
+      position: relative;
+      width: 160px; height: 160px;
+      margin: 0 auto 32px;
+    }
+    .results-score-ring svg {
+      width: 100%; height: 100%;
+      transform: rotate(-90deg);
+    }
+    .ring-bg {
+      fill: none;
+      stroke: var(--pf-border);
+      stroke-width: 10;
+    }
+    .ring-fill {
+      fill: none;
+      stroke: url(#ringGrad);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 1.2s ease-out;
+    }
+    .ring-text {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-heading);
+      font-size: 2.2rem; font-weight: 700;
+      color: var(--pf-navy);
+    }
+    .ring-text span {
+      font-size: 1rem;
+      color: var(--pf-body-text);
+      display: block;
+      margin-top: -4px;
+    }
+
+    /* Phase breakdown */
+    .phase-breakdown {
+      display: grid; gap: 12px;
+      max-width: 440px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+    .phase-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      background: var(--pf-light-grey);
+      border-radius: 10px;
+    }
+    .phase-row-icon {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--pf-white);
+    }
+    .phase-row-icon.mastered { background: var(--pf-success); }
+    .phase-row-icon.partial  { background: var(--pf-warn-yellow); color: var(--pf-navy); }
+    .phase-row-icon.missed   { background: var(--pf-error); }
+    .phase-row-info { flex: 1; }
+    .phase-row-name {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--pf-navy);
+    }
+    .phase-row-score {
+      font-size: 0.8rem;
+      color: var(--pf-body-text);
+    }
+    .phase-row-bar {
+      width: 80px; height: 6px;
+      background: var(--pf-border);
+      border-radius: 3px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .phase-row-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .results-actions {
+      display: flex; gap: 14px; justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.82rem;
+      color: #999;
+      margin-top: auto;
+    }
+    footer a {
+      color: var(--pf-indigo);
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 600px) {
+      .welcome-card, .phase-intro, .question-card, .results-card {
+        padding: 28px 20px;
+      }
+      .topbar-inner { padding: 10px 16px; }
+      .topbar-brand { display: none; }
+      .question-card h3 { font-size: 1.05rem; }
+      .option-btn { padding: 14px 16px; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========== GAME TOPBAR (visible during gameplay) ========== -->
+<nav class="game-topbar" id="gameTopbar">
+  <div class="topbar-inner">
+    <span class="topbar-brand">Prompt Lab</span>
+    <div class="topbar-progress-wrap">
+      <div class="topbar-progress-bar">
+        <div class="topbar-progress-fill" id="progressFill"></div>
+      </div>
+      <span class="topbar-progress-label" id="progressLabel">0 / 0</span>
+    </div>
+    <span class="topbar-score" id="topbarScore">0 correct</span>
+  </div>
+</nav>
+
+<!-- ============================== -->
+<!--       SCREEN: WELCOME          -->
+<!-- ============================== -->
+<div class="screen active" id="screenWelcome">
+  <div class="welcome-card">
+    <div class="welcome-badge">Interactive Learning Game</div>
+    <h1>Prompt Lab</h1>
+    <p>Test and build your understanding of crafting effective natural language testing prompts for Perfecto AI — across four challenge phases.</p>
+    <div class="welcome-phases">
+      <div class="welcome-phase"><span class="welcome-phase-num">1</span> The Mindset Shift</div>
+      <div class="welcome-phase"><span class="welcome-phase-num">2</span> Prompt Characteristics</div>
+      <div class="welcome-phase"><span class="welcome-phase-num">3</span> Pitfalls &amp; Validations</div>
+      <div class="welcome-phase"><span class="welcome-phase-num">4</span> Real-World Application</div>
+    </div>
+    <button class="btn-primary" id="btnStart">Begin Challenge</button>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!--       SCREEN: PHASE INTRO      -->
+<!-- ============================== -->
+<div class="screen" id="screenPhaseIntro">
+  <div class="phase-intro">
+    <div class="phase-label" id="phaseIntroLabel"></div>
+    <h2 id="phaseIntroTitle"></h2>
+    <p id="phaseIntroDesc"></p>
+    <button class="btn-primary" id="btnStartPhase">Start Phase</button>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!--       SCREEN: QUESTION         -->
+<!-- ============================== -->
+<div class="screen" id="screenQuestion">
+  <div class="question-card" id="questionCard">
+    <div class="question-meta">
+      <span class="question-phase-tag" id="qPhaseTag"></span>
+      <span class="question-counter" id="qCounter"></span>
+    </div>
+    <h3 id="qText"></h3>
+    <div class="question-context" id="qContext" style="display:none;"></div>
+    <ul class="options-list" id="optionsList"></ul>
+    <div class="feedback-panel" id="feedbackPanel">
+      <div class="feedback-label" id="feedbackLabel"></div>
+      <div id="feedbackText"></div>
+      <div class="next-btn-wrap">
+        <button class="btn-primary" id="btnNext" style="padding:10px 28px; font-size:0.9rem;">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!--       SCREEN: RESULTS          -->
+<!-- ============================== -->
+<div class="screen" id="screenResults">
+  <div class="results-card">
+    <h2 id="resultsTitle">Challenge Complete</h2>
+    <p class="results-subtitle" id="resultsSubtitle"></p>
+
+    <div class="results-score-ring">
+      <svg viewBox="0 0 160 160">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4A2A8A" />
+            <stop offset="100%" stop-color="#00B4D8" />
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="80" cy="80" r="70" />
+        <circle class="ring-fill" id="ringFill" cx="80" cy="80" r="70" />
+      </svg>
+      <div class="ring-text"><span id="ringPercent">0%</span><span>score</span></div>
+    </div>
+
+    <div class="phase-breakdown" id="phaseBreakdown"></div>
+
+    <div class="results-actions">
+      <button class="btn-primary" id="btnRestart">Restart Challenge</button>
+      <a href="mailto:education.help@perforce.com" class="btn-secondary" target="_blank">Contact Education Team</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <p>&copy; 2026 Perforce Software, Inc. &nbsp;|&nbsp; <a href="mailto:education.help@perforce.com">education.help@perforce.com</a></p>
+</footer>
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+(function () {
+  'use strict';
+
+  /* ==============================================
+     PHASE DEFINITIONS
+     ============================================== */
+  var phases = [
+    {
+      id: 'mindset',
+      num: 1,
+      title: 'The Mindset Shift',
+      description: 'Understand the fundamental change from telling a tool HOW to do something to telling the AI WHAT you want to accomplish.'
+    },
+    {
+      id: 'characteristics',
+      num: 2,
+      title: 'Prompt Characteristics',
+      description: 'Identify the five core characteristics that make natural language prompts effective and resilient.'
+    },
+    {
+      id: 'pitfalls',
+      num: 3,
+      title: 'Pitfalls & Validations',
+      description: 'Spot common mistakes in prompts and understand how the AI Assistant helps you iterate toward clarity.'
+    },
+    {
+      id: 'application',
+      num: 4,
+      title: 'Real-World Application',
+      description: 'Apply what you\'ve learned to realistic scenarios — variables, complex screens, timing, and specialized knowledge.'
+    }
+  ];
+
+  /* ==============================================
+     QUESTION BANK
+     ============================================== */
+  var questions = [
+
+    /* ── PHASE 1: MINDSET SHIFT (4 questions) ── */
+    {
+      phase: 0,
+      question: 'When transitioning from script-based testing to natural language testing with Perfecto AI, what fundamentally changes?',
+      context: null,
+      options: [
+        'The skills and knowledge required to test effectively',
+        'The medium through which you communicate test intent',
+        'The need for precision and logic in testing',
+        'The applications you are able to test'
+      ],
+      correct: 1,
+      explanation: 'What\'s changing is the medium, not the mindset. Your precision, logic, and deep knowledge of application behavior remain just as valuable — you\'re simply expressing test intent in plain language instead of code.'
+    },
+    {
+      phase: 0,
+      question: 'Which of the following best represents a "What" prompt rather than a "How" prompt?',
+      context: null,
+      options: [
+        'driver.findElement(By.xpath("//button[@id=\'confirm\']")).click();',
+        'Move the mouse to the button labeled Cart in the bottom right corner',
+        'Select VISA as payment method and confirm',
+        'Click the element with CSS selector #checkout-btn'
+      ],
+      correct: 2,
+      explanation: 'In natural language testing, you describe the logical goal — what you want to accomplish — rather than the mechanical steps of how to manipulate UI elements. "Select VISA as payment method and confirm" describes intent, not DOM interaction.'
+    },
+    {
+      phase: 0,
+      question: 'Why do traditional script-based tests frequently break?',
+      context: null,
+      options: [
+        'Because the test data becomes outdated over time',
+        'Because test scripts are defined as actions applied to locators, and the test breaks when a UI element changes',
+        'Because natural language is inherently more reliable than code',
+        'Because automation frameworks are poorly maintained'
+      ],
+      correct: 1,
+      explanation: 'When you define test scripts as actions applied to locators, the test script breaks every time a UI element changes. Natural language prompts describe the logical task instead, making them more resilient to UI changes.'
+    },
+    {
+      phase: 0,
+      question: 'How does the AI User Action Assistant determine what to interact with on screen?',
+      context: null,
+      options: [
+        'It uses pre-configured object locators and XPath expressions',
+        'It interprets what it sees on the screen, much like a human tester would',
+        'It reads the application\'s source code to find elements',
+        'It relies on a pre-built map of all UI components'
+      ],
+      correct: 1,
+      explanation: 'The AI interprets what it sees on the screen, much like a human tester would. This means it can identify buttons and elements by their logical purpose, even if the underlying code or labels change.'
+    },
+
+    /* ── PHASE 2: PROMPT CHARACTERISTICS (5 questions) ── */
+    {
+      phase: 1,
+      question: 'Which prompt characteristic is violated by the instruction: "Fill in the form"?',
+      context: null,
+      options: [
+        'Goal-Oriented — it describes "how" instead of "what"',
+        'Specific and Detailed — it\'s too vague to be performed consistently',
+        'Binary and Objective — it\'s not a yes/no question',
+        'Scoped Appropriately — it tries to do too many things at once'
+      ],
+      correct: 1,
+      explanation: '"Fill in the form" is too vague. An effective prompt would be: Enter "Jill A. Smith" in the name fields. Enter Main Street 1 in NYC, USA, as the address. Providing enough detail ensures the AI can repeat the task consistently every time.'
+    },
+    {
+      phase: 1,
+      question: 'Which of these prompts is properly goal-oriented?',
+      context: null,
+      options: [
+        'Move the mouse to the button labeled Cart in the bottom right corner',
+        'Click the element at coordinates (450, 320)',
+        'On the profile page, open the shopping cart',
+        'Find the div with class="cart-icon" and trigger a click event'
+      ],
+      correct: 2,
+      explanation: '"On the profile page, open the shopping cart" describes the logical goal without referring to specific locators, coordinates, or labels that can change during development. The AI — like a manual tester — can follow this instruction regardless of UI changes.'
+    },
+    {
+      phase: 1,
+      question: 'What makes a validation prompt effective in Perfecto AI?',
+      context: null,
+      options: [
+        'It asks an open-ended question to gather information',
+        'It has a binary answer: yes or no, PASS or FAIL',
+        'It describes multiple possible outcomes for flexibility',
+        'It uses technical element identifiers for precision'
+      ],
+      correct: 1,
+      explanation: 'A validation is a special type of question with a binary answer: yes or no, PASS or FAIL. Open-ended questions like "How much is the account balance?" are not validations. Instead, write: "Is the account balance equal to $22?"'
+    },
+    {
+      phase: 1,
+      question: 'Which approach is MORE efficient for filling forms with AI User Actions?',
+      context: null,
+      options: [
+        'Fill in username John → Enter last name Doe → Select year 2001 → Submit the form (4 separate actions)',
+        'Fill in username John, last name Doe, year 2001 → Submit the form (2 actions)',
+        'Fill in every field individually for maximum precision',
+        'Submit the form and let the AI figure out the required fields'
+      ],
+      correct: 1,
+      explanation: 'Instead of filling each field as a separate action, combine several value inputs into one prompt. Then tell the Assistant to click the submit button as a separate action. This keeps prompts scoped appropriately — each representing one coherent goal.'
+    },
+    {
+      phase: 1,
+      question: 'A screen shows multiple red shoe products. Which prompt correctly avoids ambiguity?',
+      context: null,
+      options: [
+        'Click the red shoes',
+        'Select the shoes on the page',
+        'From the search results, select the red sneakers that cost $30',
+        'Click the first item in the product list'
+      ],
+      correct: 2,
+      explanation: 'When the screen contains multiple similar elements, your prompt needs to eliminate any doubt about which one you mean. "From the search results, select the red sneakers that cost $30" uses specific, distinguishing details to resolve ambiguity.'
+    },
+
+    /* ── PHASE 3: PITFALLS & VALIDATIONS (4 questions) ── */
+    {
+      phase: 2,
+      question: 'In a pizza restaurant menu app, which prompt would return a reliable, accurate result?',
+      context: 'The menu shows multiple pizzas at different prices.',
+      options: [
+        '"Does pizza taste good?"',
+        '"How does the pizza taste?"',
+        '"Does the pizza cost $80?"',
+        '"Does the Golden corn pizza cost $80?"'
+      ],
+      correct: 3,
+      explanation: '"Does the Golden corn pizza cost $80?" is specific and objective — it names the exact item and states an expected value. The other prompts are either subjective, irrelevant to screen content, or ambiguous about which pizza is meant.'
+    },
+    {
+      phase: 2,
+      question: 'What is the primary problem with the validation prompt: "Does pizza taste good?"',
+      context: null,
+      options: [
+        'It is too specific and narrow',
+        'It is too subjective — there is no objective answer on the screen',
+        'It doesn\'t mention enough pizza varieties',
+        'It should use a variable like ${taste}'
+      ],
+      correct: 1,
+      explanation: '"Does pizza taste good?" is subjective — taste is a matter of opinion that cannot be verified by looking at the screen. Effective validations must be objective, verifiable against what the screen actually displays.'
+    },
+    {
+      phase: 2,
+      question: 'The AI Assistant gives your prompt a RED objectivity score. What should you do?',
+      context: null,
+      options: [
+        'Proceed anyway — the score is just a suggestion',
+        'Rework the prompt before using it in your test, as it is too vague, ambiguous, or subjective',
+        'Delete the test case and start over from scratch',
+        'Switch back to script-based testing for this step'
+      ],
+      correct: 1,
+      explanation: 'A red objectivity score means the prompt is too vague, ambiguous, or subjective. You should rework it before using it. Green means clear and objective; yellow means functional but could be more robust.'
+    },
+    {
+      phase: 2,
+      question: 'When the AI Assistant suggests a rephrasing of your prompt, what is happening?',
+      context: 'You entered: "Does the pizza cost $80?" — The AI responded: PASS: There are pizzas that cost $80. Suggested rephrasing: "Are there pizzas that cost $80 on the menu?"',
+      options: [
+        'The AI is rejecting your prompt and requiring you to use its version',
+        'The AI is transforming your question into a more objective validation format while preserving your intent',
+        'The AI is indicating that your test has failed',
+        'The AI is asking you to provide additional locator information'
+      ],
+      correct: 1,
+      explanation: 'The AI Validation Assistant crafts suggestions that meet the entire semantic request from the discussion. It transforms generic questions into a more objective validation format and corrects grammar and typos — acting as a collaborative partner, not a gatekeeper.'
+    },
+
+    /* ── PHASE 4: REAL-WORLD APPLICATION (4 questions) ── */
+    {
+      phase: 3,
+      question: 'Which natural language prompt is equivalent to this script-based code?',
+      context: 'driver.findElement(By.id("username")).sendKeys("joe@example.com");\ndriver.findElement(By.id("password")).sendKeys("Pass123!");\ndriver.findElement(By.id("loginBtn")).click();',
+      options: [
+        'Find element by ID username, send keys joe@example.com, find loginBtn, click',
+        'Log in as Joe with password 123',
+        'Enter text into the username and password fields, then submit',
+        'Navigate to the login page and authenticate the user session'
+      ],
+      correct: 1,
+      explanation: '"Log in as Joe with password 123" describes the intent clearly and concisely. You no longer need to specify element IDs, sendKeys commands, or click actions — the AI understands the logical goal of logging in.'
+    },
+    {
+      phase: 3,
+      question: 'How do you store dynamic data in a variable during natural language testing?',
+      context: null,
+      options: [
+        'var rate = driver.findElement(By.id("rate")).getText();',
+        'Describe the value and specify the variable name, e.g., "Identify the exchange rate shown and save it to ${rate}"',
+        'Variables are not supported in natural language testing',
+        'Use the AI\'s built-in variable auto-detection — no prompt needed'
+      ],
+      correct: 1,
+      explanation: 'To create a variable, describe its value and in which variable to store it using the format ${variable-name}. For example: "Identify the exchange rate shown and save it to ${rate}." You can then use ${rate} in later steps and validations.'
+    },
+    {
+      phase: 3,
+      question: 'How should you handle a screen with densely packed, small UI elements?',
+      context: 'You need to interact with a specific checkbox in a complex table.',
+      options: [
+        'Use XPath to precisely target the element by its DOM path',
+        'Instruct the assistant to focus on the specific area first — e.g., "Focus on the transfer history table and look at the first row"',
+        'Avoid testing complex screens with AI — use script-based tests instead',
+        'Click at specific pixel coordinates on the screen'
+      ],
+      correct: 1,
+      explanation: 'To improve interaction precision with small or unclear elements, instruct the assistant to focus on a certain area. Tell it to "focus on," "look closely at," or "zoom into" the relevant section before performing the action.'
+    },
+    {
+      phase: 3,
+      question: 'Where should you store specialized knowledge about your application\'s unique UI for the AI Assistant to use?',
+      context: 'Your app has a custom dashboard with non-standard chart interactions.',
+      options: [
+        'Include a detailed description in every single prompt you write',
+        'Write it in a plain text file named ai.txt and upload it to the root of the Perfecto Repository',
+        'Email the knowledge to the Perfecto support team for manual configuration',
+        'Store it in environment variables in your CI/CD pipeline'
+      ],
+      correct: 1,
+      explanation: 'Write your specialized knowledge in a plain text file, save it as ai.txt, and upload it to the root of the Perfecto Repository. The knowledge then appears in the AI Assistant as part of your request, as general user instructions — no need to repeat it in every prompt.'
+    }
+  ];
+  /* ==============================================
+     GAME STATE
+     ============================================== */
+  var state = {
+    currentQuestion: 0,
+    currentPhase: 0,
+    totalCorrect: 0,
+    answers: [],          // { qIndex, chosen, correct, isCorrect }
+    phaseScores: [0, 0, 0, 0],
+    phaseTotals: [0, 0, 0, 0],
+    started: false,
+    finished: false
+  };
+
+  // Pre-calculate phase totals
+  questions.forEach(function (q) {
+    state.phaseTotals[q.phase]++;
+  });
+
+  /* ==============================================
+     DOM REFERENCES
+     ============================================== */
+  var dom = {
+    screenWelcome:    document.getElementById('screenWelcome'),
+    screenPhaseIntro: document.getElementById('screenPhaseIntro'),
+    screenQuestion:   document.getElementById('screenQuestion'),
+    screenResults:    document.getElementById('screenResults'),
+    gameTopbar:       document.getElementById('gameTopbar'),
+    progressFill:     document.getElementById('progressFill'),
+    progressLabel:    document.getElementById('progressLabel'),
+    topbarScore:      document.getElementById('topbarScore'),
+    phaseIntroLabel:  document.getElementById('phaseIntroLabel'),
+    phaseIntroTitle:  document.getElementById('phaseIntroTitle'),
+    phaseIntroDesc:   document.getElementById('phaseIntroDesc'),
+    qPhaseTag:        document.getElementById('qPhaseTag'),
+    qCounter:         document.getElementById('qCounter'),
+    qText:            document.getElementById('qText'),
+    qContext:         document.getElementById('qContext'),
+    optionsList:      document.getElementById('optionsList'),
+    feedbackPanel:    document.getElementById('feedbackPanel'),
+    feedbackLabel:    document.getElementById('feedbackLabel'),
+    feedbackText:     document.getElementById('feedbackText'),
+    btnStart:         document.getElementById('btnStart'),
+    btnStartPhase:    document.getElementById('btnStartPhase'),
+    btnNext:          document.getElementById('btnNext'),
+    btnRestart:       document.getElementById('btnRestart'),
+    resultsTitle:     document.getElementById('resultsTitle'),
+    resultsSubtitle:  document.getElementById('resultsSubtitle'),
+    ringFill:         document.getElementById('ringFill'),
+    ringPercent:      document.getElementById('ringPercent'),
+    phaseBreakdown:   document.getElementById('phaseBreakdown')
+  };
+
+  /* ==============================================
+     SCREEN MANAGEMENT
+     ============================================== */
+  function showScreen(screenEl) {
+    var screens = document.querySelectorAll('.screen');
+    screens.forEach(function (s) { s.classList.remove('active'); });
+    screenEl.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ==============================================
+     TOPBAR UPDATES
+     ============================================== */
+  function updateTopbar() {
+    var total = questions.length;
+    var answered = state.answers.length;
+    var pct = total > 0 ? (answered / total) * 100 : 0;
+    dom.progressFill.style.width = pct + '%';
+    dom.progressLabel.textContent = answered + ' / ' + total;
+    dom.topbarScore.textContent = state.totalCorrect + ' correct';
+  }
+
+  /* ==============================================
+     PHASE INTRO RENDERING
+     ============================================== */
+  function showPhaseIntro(phaseIndex) {
+    var phase = phases[phaseIndex];
+    dom.phaseIntroLabel.textContent = 'Phase ' + phase.num + ' of ' + phases.length;
+    dom.phaseIntroTitle.textContent = phase.title;
+    dom.phaseIntroDesc.textContent = phase.description;
+    showScreen(dom.screenPhaseIntro);
+  }
+
+  /* ==============================================
+     QUESTION RENDERING
+     ============================================== */
+  function renderQuestion() {
+    var q = questions[state.currentQuestion];
+    var phase = phases[q.phase];
+    var questionNumInPhase = 0;
+    var totalInPhase = state.phaseTotals[q.phase];
+
+    // Calculate which # within the phase
+    var count = 0;
+    for (var i = 0; i <= state.currentQuestion; i++) {
+      if (questions[i].phase === q.phase) count++;
+    }
+    questionNumInPhase = count;
+
+    // Update meta
+    dom.qPhaseTag.textContent = 'Phase ' + phase.num + ': ' + phase.title;
+    dom.qCounter.textContent = 'Q' + questionNumInPhase + ' of ' + totalInPhase;
+
+    // Question text
+    dom.qText.textContent = q.question;
+
+    // Context block
+    if (q.context) {
+      dom.qContext.style.display = 'block';
+      dom.qContext.textContent = q.context;
+    } else {
+      dom.qContext.style.display = 'none';
+    }
+
+    // Clear feedback
+    dom.feedbackPanel.classList.remove('visible', 'correct-feedback', 'incorrect-feedback');
+
+    // Render options
+    var letters = ['A', 'B', 'C', 'D'];
+    var html = '';
+    q.options.forEach(function (opt, idx) {
+      html += '<li>';
+      html += '<button class="option-btn" data-index="' + idx + '">';
+      html += '<span class="opt-letter">' + letters[idx] + '</span>';
+      html += '<span>' + escapeHtml(opt) + '</span>';
+      html += '</button>';
+      html += '</li>';
+    });
+    dom.optionsList.innerHTML = html;
+
+    // Attach click listeners
+    var optBtns = dom.optionsList.querySelectorAll('.option-btn');
+    optBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        handleAnswer(parseInt(this.getAttribute('data-index'), 10));
+      });
+    });
+
+    // Re-animate card
+    var card = document.getElementById('questionCard');
+    card.style.animation = 'none';
+    card.offsetHeight; // force reflow
+    card.style.animation = 'fadeSlideIn 0.4s ease-out';
+
+    showScreen(dom.screenQuestion);
+    updateTopbar();
+  }
+
+  /* ==============================================
+     HTML ESCAPE UTILITY
+     ============================================== */
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  /* ==============================================
+     ANSWER HANDLING
+     ============================================== */
+  function handleAnswer(chosenIndex) {
+    var q = questions[state.currentQuestion];
+    var isCorrect = chosenIndex === q.correct;
+
+    // Record
+    state.answers.push({
+      qIndex: state.currentQuestion,
+      chosen: chosenIndex,
+      correct: q.correct,
+      isCorrect: isCorrect
+    });
+
+    if (isCorrect) {
+      state.totalCorrect++;
+      state.phaseScores[q.phase]++;
+    }
+
+    // Disable all buttons & highlight
+    var optBtns = dom.optionsList.querySelectorAll('.option-btn');
+    optBtns.forEach(function (btn) {
+      btn.classList.add('disabled');
+      var idx = parseInt(btn.getAttribute('data-index'), 10);
+      if (idx === q.correct) {
+        btn.classList.add('correct');
+      } else if (idx === chosenIndex && !isCorrect) {
+        btn.classList.add('incorrect');
+      } else {
+        btn.classList.add('dimmed');
+      }
+    });
+
+    // Show feedback
+    dom.feedbackPanel.classList.remove('correct-feedback', 'incorrect-feedback');
+    if (isCorrect) {
+      dom.feedbackPanel.classList.add('correct-feedback');
+      dom.feedbackLabel.textContent = '✓ Correct';
+    } else {
+      dom.feedbackPanel.classList.add('incorrect-feedback');
+      dom.feedbackLabel.textContent = '✗ Not Quite';
+    }
+    dom.feedbackText.textContent = q.explanation;
+    dom.feedbackPanel.classList.add('visible');
+
+    // Update topbar
+    updateTopbar();
+
+    // Scroll feedback into view
+    dom.feedbackPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ==============================================
+     NAVIGATION: NEXT QUESTION / PHASE / RESULTS
+     ============================================== */
+  function goNext() {
+    var nextIndex = state.currentQuestion + 1;
+
+    // If we've exhausted all questions → results
+    if (nextIndex >= questions.length) {
+      showResults();
+      return;
+    }
+
+    // Check if we're entering a new phase
+    var currentPhase = questions[state.currentQuestion].phase;
+    var nextPhase = questions[nextIndex].phase;
+
+    state.currentQuestion = nextIndex;
+
+    if (nextPhase !== currentPhase) {
+      state.currentPhase = nextPhase;
+      showPhaseIntro(nextPhase);
+    } else {
+      renderQuestion();
+    }
+  }
+  /* ==============================================
+     RESULTS SCREEN
+     ============================================== */
+  function showResults() {
+    state.finished = true;
+
+    var total = questions.length;
+    var correct = state.totalCorrect;
+    var pct = Math.round((correct / total) * 100);
+
+    // Title & subtitle based on performance
+    if (pct >= 90) {
+      dom.resultsTitle.textContent = 'Excellent Comprehension';
+      dom.resultsSubtitle.textContent = 'You have a strong grasp of crafting effective natural language prompts in Perfecto AI.';
+    } else if (pct >= 70) {
+      dom.resultsTitle.textContent = 'Solid Understanding';
+      dom.resultsSubtitle.textContent = 'You\'re well on your way. Review the areas below where there\'s room to sharpen your skills.';
+    } else if (pct >= 50) {
+      dom.resultsTitle.textContent = 'Building Foundations';
+      dom.resultsSubtitle.textContent = 'You\'ve got the basics — revisiting the lesson content will help solidify the concepts that tripped you up.';
+    } else {
+      dom.resultsTitle.textContent = 'Worth Another Look';
+      dom.resultsSubtitle.textContent = 'Natural language testing is a real shift in thinking. Review the lesson and try again — the concepts will click.';
+    }
+
+    // Score ring animation
+    dom.ringPercent.textContent = pct + '%';
+    var circumference = 2 * Math.PI * 70; // r=70
+    var offset = circumference - (pct / 100) * circumference;
+    dom.ringFill.style.strokeDasharray = circumference;
+    dom.ringFill.style.strokeDashoffset = circumference;
+
+    // Trigger animation after brief delay
+    setTimeout(function () {
+      dom.ringFill.style.strokeDashoffset = offset;
+    }, 100);
+
+    // Phase breakdown
+    var breakdownHtml = '';
+    phases.forEach(function (phase, idx) {
+      var phaseCorrect = state.phaseScores[idx];
+      var phaseTotal = state.phaseTotals[idx];
+      var phasePct = phaseTotal > 0 ? Math.round((phaseCorrect / phaseTotal) * 100) : 0;
+
+      var iconClass = 'missed';
+      var iconSymbol = '✗';
+      var barColor = 'var(--pf-error)';
+      if (phasePct >= 80) {
+        iconClass = 'mastered';
+        iconSymbol = '✓';
+        barColor = 'var(--pf-success)';
+      } else if (phasePct >= 50) {
+        iconClass = 'partial';
+        iconSymbol = '~';
+        barColor = 'var(--pf-warn-yellow)';
+      }
+
+      breakdownHtml += '<div class="phase-row">';
+      breakdownHtml += '  <div class="phase-row-icon ' + iconClass + '">' + iconSymbol + '</div>';
+      breakdownHtml += '  <div class="phase-row-info">';
+      breakdownHtml += '    <div class="phase-row-name">' + phase.title + '</div>';
+      breakdownHtml += '    <div class="phase-row-score">' + phaseCorrect + ' of ' + phaseTotal + ' correct</div>';
+      breakdownHtml += '  </div>';
+      breakdownHtml += '  <div class="phase-row-bar">';
+      breakdownHtml += '    <div class="phase-row-bar-fill" style="width:0%; background:' + barColor + ';" data-target-width="' + phasePct + '%"></div>';
+      breakdownHtml += '  </div>';
+      breakdownHtml += '</div>';
+    });
+    dom.phaseBreakdown.innerHTML = breakdownHtml;
+
+    // Show screen first, then animate bars
+    dom.gameTopbar.classList.remove('visible');
+    showScreen(dom.screenResults);
+
+    // Animate phase bars after a staggered delay
+    setTimeout(function () {
+      var bars = dom.phaseBreakdown.querySelectorAll('.phase-row-bar-fill');
+      bars.forEach(function (bar, i) {
+        setTimeout(function () {
+          bar.style.width = bar.getAttribute('data-target-width');
+        }, i * 150);
+      });
+    }, 300);
+  }
+
+  /* ==============================================
+     RESTART GAME
+     ============================================== */
+  function restartGame() {
+    // Reset all state
+    state.currentQuestion = 0;
+    state.currentPhase = 0;
+    state.totalCorrect = 0;
+    state.answers = [];
+    state.phaseScores = [0, 0, 0, 0];
+    state.started = false;
+    state.finished = false;
+
+    // Reset ring animation
+    var circumference = 2 * Math.PI * 70;
+    dom.ringFill.style.strokeDashoffset = circumference;
+    dom.ringPercent.textContent = '0%';
+
+    // Reset topbar
+    dom.progressFill.style.width = '0%';
+    dom.progressLabel.textContent = '0 / ' + questions.length;
+    dom.topbarScore.textContent = '0 correct';
+    dom.gameTopbar.classList.remove('visible');
+
+    // Show welcome
+    showScreen(dom.screenWelcome);
+  }
+
+  /* ==============================================
+     START GAME
+     ============================================== */
+  function startGame() {
+    state.started = true;
+    state.currentPhase = 0;
+    dom.gameTopbar.classList.add('visible');
+    updateTopbar();
+    showPhaseIntro(0);
+  }
+
+  /* ==============================================
+     EVENT LISTENERS
+     ============================================== */
+  dom.btnStart.addEventListener('click', function () {
+    startGame();
+  });
+
+  dom.btnStartPhase.addEventListener('click', function () {
+    renderQuestion();
+  });
+
+  dom.btnNext.addEventListener('click', function () {
+    goNext();
+  });
+
+  dom.btnRestart.addEventListener('click', function () {
+    restartGame();
+  });
+
+})();
+</script>
+
+</body>
+</html>
